@@ -11,15 +11,17 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Seed the application's database.
+     * Popula a base de dados da aplicacao.
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+            'name' => 'Usuario de Teste',
+            'username' => 'usuario.teste',
+            'email' => 'teste@examplo.com',
+            'password' => 'password',
         ]);
+
+        $this->call(ResourceSeeder::class);
     }
 }

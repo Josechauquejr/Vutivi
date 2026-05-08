@@ -7,137 +7,56 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * Executa as migrations.
      */
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
-             $table->id();
-             $table->string('name');
-             $table->string('description')->nullable();
-             $table->timestamps();
-         });
-         
-       Schema::create('users', function (Blueprint $table) {
+        Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('username')->unique();
             $table->string('email')->unique();
             $table->string('password');
-            $table->foreignId('role_id')->constrained('roles');
-            $table->boolean('active')->default(true);
-            $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
         });
 
-
-        Schema::create('work_types', function (Blueprint $table) {
+        Schema::create('resources', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-
-        Schema::create('works', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('work_type_id')->constrained('work_types');
-
             $table->string('title');
-            $table->text('synopsis')->nullable();
-            $table->text('summary')->nullable();
-            $table->string('isbn')->nullable();
-
-            $table->integer('publication_year')->nullable();
-            $table->string('language')->nullable();
-            $table->string('status')->nullable();
-
-            $table->integer('total_likes')->default(0);
-            $table->integer('total_views')->default(0);
-            $table->integer('total_downloads')->default(0);
-
+            $table->text('description')->nullable();
+            $table->enum('type', ['physical', 'digital']);
+            $table->enum('status', ['available', 'reserved', 'active'])->default('available');
+            $table->integer('quantity_available')->default(1);
+            $table->foreignId('owner_id')->constrained('users');
             $table->timestamps();
         });
 
-        Schema::create('files', function (Blueprint $table) {
+        Schema::create('physical_resources', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('work_id')->constrained('works');
-
-            $table->string('original_name');
-            $table->string('path');
-            $table->string('format');
-            $table->bigInteger('size_bytes');
-
-            $table->timestamp('uploaded_at')->nullable();
-
-            $table->timestamps();
+            $table->foreignId('resource_id')->unique()->constrained('resources')->cascadeOnDelete();
+            $table->string('location');
+            $table->unsignedInteger('max_loan_days');
+            $table->string('condition');
         });
 
-        Schema::create('authors', function (Blueprint $table) {
+        Schema::create('digital_resources', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->text('biography')->nullable();
-            $table->string('nationality')->nullable();
-            $table->timestamps();
+            $table->foreignId('resource_id')->unique()->constrained('resources')->cascadeOnDelete();
+            $table->string('file_path');
+            $table->enum('access_type', ['download', 'view']);
+            $table->unsignedInteger('access_days');
         });
 
-        Schema::create('categories', function (Blueprint $table) {
+        Schema::create('reservations', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('slug');
-
-            $table->foreignId('parent_id')
-                ->nullable()
-                ->constrained('categories');
-
+            $table->foreignId('resource_id')->constrained('resources')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->enum('type', ['physical', 'digital']);
+            $table->date('start_date');
+            $table->date('end_date');
+            $table->timestamp('returned_at')->nullable();
             $table->timestamps();
         });
-
-        Schema::create('likes', function (Blueprint $table) {
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('work_id')->constrained('works');
-
-            $table->timestamp('created_at')->useCurrent();
-
-            $table->primary(['user_id', 'work_id']);
-        });
-
-        Schema::create('personal_library', function (Blueprint $table) {
-            $table->foreignId('user_id')->constrained('users');
-            $table->foreignId('work_id')->constrained('works');
-
-            $table->string('tag')->nullable();
-            $table->timestamp('added_at')->useCurrent();
-
-            $table->primary(['user_id', 'work_id']);
-        });
-
-        Schema::create('transfers', function (Blueprint $table) {
-            $table->id();
-
-            $table->foreignId('file_id')->constrained('files');
-            $table->foreignId('user_id')->constrained('users');
-
-            $table->string('origin_ip');
-            $table->timestamp('transferred_at')->useCurrent();
-
-            $table->timestamps();
-        });
-
-        Schema::create('author_work', function (Blueprint $table) {
-            $table->foreignId('author_id')->constrained('authors');
-            $table->foreignId('work_id')->constrained('works');
-
-            $table->primary(['author_id', 'work_id']);
-        });
-
-        Schema::create('category_work', function (Blueprint $table) {
-            $table->foreignId('category_id')->constrained('categories');
-            $table->foreignId('work_id')->constrained('works');
-
-            $table->primary(['category_id', 'work_id']);
-        });
-
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
@@ -156,23 +75,16 @@ return new class extends Migration
     }
 
     /**
-     * Reverse the migrations.
+     * Reverte as migrations.
      */
     public function down(): void
     {
-        Schema::dropIfExists('category_work');
-        Schema::dropIfExists('author_work');
-        Schema::dropIfExists('transfers');
-        Schema::dropIfExists('personal_library');
-        Schema::dropIfExists('likes');
+        Schema::dropIfExists('reservations');
+        Schema::dropIfExists('digital_resources');
+        Schema::dropIfExists('physical_resources');
         Schema::dropIfExists('sessions');
         Schema::dropIfExists('password_reset_tokens');
-        Schema::dropIfExists('files');
-        Schema::dropIfExists('works');
-        Schema::dropIfExists('categories');
-        Schema::dropIfExists('work_types');
-        Schema::dropIfExists('authors');
+        Schema::dropIfExists('resources');
         Schema::dropIfExists('users');
-        Schema::dropIfExists('roles');
     }
 };
