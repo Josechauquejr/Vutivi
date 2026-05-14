@@ -116,6 +116,34 @@ h2 {
     box-shadow: 0 0 5px rgba(254, 104, 7, 0.3);
 }
 
+.field-error {
+    margin-top: 6px;
+    color: #dc2626;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.form-message {
+    margin-bottom: 16px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.form-message ul {
+    margin-top: 6px;
+    padding-left: 18px;
+    list-style: disc;
+}
+
+.form-message--error {
+    border: 1px solid #fecaca;
+    background: #fef2f2;
+    color: #991b1b;
+}
+
 .forgot-password {
     display: block;
     text-align: right;
@@ -616,6 +644,16 @@ h2 {
     .input-group input:focus {
         border-color: #fe6807;
         box-shadow: 0 0 0 3px rgba(254, 104, 7, 0.18);
+    }
+
+    .field-error {
+        color: #fca5a5;
+    }
+
+    .form-message--error {
+        border-color: rgba(220, 38, 38, 0.4);
+        background: rgba(127, 29, 29, 0.38);
+        color: #fecaca;
     }
 
     .register-text {

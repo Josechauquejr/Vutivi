@@ -101,6 +101,49 @@ abstract class UserFormRequest extends FormRequest
     }
 
     /**
+     * Mensagens amigaveis para os formularios de usuario.
+     *
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.required' => 'Informe o nome.',
+            'name.min' => 'O nome deve ter pelo menos :min caracteres.',
+            'name.regex' => 'O nome deve conter apenas letras e espacos.',
+            'username.required' => 'Informe o username.',
+            'username.min' => 'O username deve ter pelo menos :min caracteres.',
+            'username.regex' => 'O username pode conter apenas letras, numeros, ponto, hifen e underscore.',
+            'username.unique' => 'Este username ja esta cadastrado.',
+            'email.required' => 'Informe o email.',
+            'email.email' => 'Informe um email valido.',
+            'email.unique' => 'Este email ja esta cadastrado.',
+            'password.required' => 'Informe a password.',
+            'password.confirmed' => 'A confirmacao da password nao corresponde.',
+            'password.min' => 'A password deve ter pelo menos :min caracteres.',
+            'password.letters' => 'A password deve conter pelo menos uma letra.',
+            'password.mixed' => 'A password deve conter letras maiusculas e minusculas.',
+            'password.numbers' => 'A password deve conter pelo menos um numero.',
+            'password.symbols' => 'A password deve conter pelo menos um simbolo.',
+        ];
+    }
+
+    /**
+     * Nomes dos campos apresentados nas mensagens geradas pelo Laravel.
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'name' => 'nome',
+            'username' => 'username',
+            'email' => 'email',
+            'password' => 'password',
+        ];
+    }
+
+    /**
      * Normaliza os campos textuais antes da validacao.
      */
     protected function prepareForValidation(): void

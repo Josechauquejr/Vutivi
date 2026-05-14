@@ -11,30 +11,62 @@
 
         <h2>Registrar</h2>
 
-        <form>
+        <form method="POST" action="{{ route('users.store') }}">
+            @csrf
+            @if (session('error'))
+                <p class="form-message form-message--error">
+                    {{ session('error') }}
+                </p>
+            @endif
+
+            @if ($errors->any())
+                <div class="form-message form-message--error">
+                    <strong>Corrija os dados abaixo:</strong>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
             <div class="input-group">
-                <label>Nome</label>
-                <input type="text" placeholder="Digite seu nome">
+                <label for="name">Nome</label>
+                <input type="text" name="name" id="name" value="{{ old('name') }}" placeholder="Digite seu nome">
+                @error('name')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="input-group">
-                <label>Email</label>
-                <input type="email" placeholder="Digite seu email">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email" value="{{ old('email') }}" placeholder="Digite seu email">
+                @error('email')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="input-group">
-                <label>Username</label>
-                <input type="text" placeholder="Digite seu username">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" value="{{ old('username') }}"
+                    placeholder="Digite seu username">
+                @error('username')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="input-group">
-                <label>Password</label>
-                <input type="password" placeholder="Digite sua password">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" placeholder="Digite sua password">
+                @error('password')
+                    <p class="field-error">{{ $message }}</p>
+                @enderror
             </div>
 
             <div class="input-group">
-                <label>Confirmar Password</label>
-                <input type="password" placeholder="Confirme sua password">
+                <label for="password_confirmation">Confirmar Password</label>
+                <input type="password" name="password_confirmation" id="password_confirmation"
+                    placeholder="Confirme sua password">
             </div>
 
             <button type="submit" class="btn-login">Registrar</button>
