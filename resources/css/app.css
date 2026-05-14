@@ -61,6 +61,16 @@ body.auth-page {
     min-height: 0;
 }
 
+@media (min-width: 1024px) {
+    body:has(.app-sidebar) main.item {
+        padding-left: calc(16rem + 1.5rem);
+    }
+
+    body:has(.app-sidebar) .banner__content {
+        margin-left: clamp(280px, 24vw, 360px);
+    }
+}
+
 .login-container {
     background: rgba(255, 255, 255, 0.9);
     width: 100%;

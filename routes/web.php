@@ -31,6 +31,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/home', [ResourceController::class, 'index'])->name('home');
+    Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+    Route::get('/borrowed', [ResourceController::class, 'borrowed'])->name('borrowed');
 
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('{user}/edit', 'edit')->name('edit');

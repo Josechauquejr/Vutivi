@@ -59,6 +59,7 @@ class ReservationController extends Controller
     public function store(StoreReservationRequest $request)
     {
         $reservationData = $request->reservationData();
+        $reservationData['user_id'] = auth()->id();
         $resource = $this->reservationResource((int) $reservationData['resource_id']);
 
         $this->validateReservationAgainstResource->handle($resource, $reservationData);
@@ -67,7 +68,9 @@ class ReservationController extends Controller
 
         $this->syncResourceAvailability->handle($resource->fresh());
 
-        return redirect()->route('reservations.show', $reservation->id);
+        return redirect()
+            ->route('resources.show', $resource->id)
+            ->with('success', 'Emprestimo solicitado com sucesso.');
     }
 
     /**

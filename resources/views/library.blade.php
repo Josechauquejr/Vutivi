@@ -1,11 +1,14 @@
 <!doctype html>
 <html lang="pt">
 
-<x-head title="Meus Livros" />
+<x-head title="Biblioteca de Recursos" />
 
 @php
     $resourceItems = collect(method_exists($resources, 'items') ? $resources->items() : $resources);
     $totalResources = method_exists($resources, 'total') ? $resources->total() : $resourceItems->count();
+    $pageTitle = $pageTitle ?? 'Recursos';
+    $pageEyebrow = $pageEyebrow ?? 'Biblioteca';
+    $pageDescription = $pageDescription ?? 'Um espaco com recursos de leitura, estudo e apoio visual em vez de somente livros, com cards mais uniformes.';
 
     $coverClasses = [
         'from-[#2a1813] via-[#5d3528] to-[#ba9872]',
@@ -49,6 +52,7 @@
         $coverTitle = collect($titleWords)->take(3)->implode(' ');
 
         return [
+            'id' => $resource->id,
             'title' => $resource->title,
             'type_label' => $isDigital ? 'Recurso digital' : 'Recurso fisico',
             'file_type_label' => $fileType,
@@ -79,15 +83,16 @@
             <div
                 class="relative flex flex-col gap-5 border-b border-[#f3e4d8] pb-6 dark:border-[#241915] sm:flex-row sm:items-end sm:justify-between">
                 <div class="min-w-0">
-                    <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#c97d46]">Biblioteca</p>
-                    <h1 class="mt-3 text-2xl font-semibold text-[#2c1c13] dark:text-white sm:text-3xl md:text-4xl">Recursos</h1>
+                    <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#c97d46]">{{ $pageEyebrow }}</p>
+                    <h1 class="mt-3 text-2xl font-semibold text-[#2c1c13] dark:text-white sm:text-3xl md:text-4xl">
+                        {{ $pageTitle }}</h1>
                     <p class="mt-2 max-w-2xl text-sm leading-6 text-[#7a5c4a] dark:text-[#d5c7be]">
-                        Um espaco com recursos de leitura, estudo e apoio visual em vez de somente livros, com cards
-                        mais uniformes.
+                        {{ $pageDescription }}
                     </p>
                 </div>
 
-                <div class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end xl:w-auto xl:flex-nowrap">
+                <div
+                    class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end xl:w-auto xl:flex-nowrap">
                     <div
                         class="inline-flex min-h-11 w-full items-center justify-center gap-3 rounded-full border border-[#ffd8bf] bg-[#fff4ec] px-4 text-sm font-medium text-[#9f5627] shadow-[0_12px_24px_rgba(254,104,7,0.10)] dark:border-[#4a2a1b] dark:bg-[#120d0a] dark:text-[#ffb07a] sm:w-auto sm:justify-start xl:px-5">
                         <span class="flex h-2.5 w-2.5 rounded-full bg-[#FE6807]"></span>
@@ -107,12 +112,24 @@
                         <div id="resourcesFilterDropdown"
                             class="z-10 hidden w-48 rounded-2xl border border-[#f3e4d8] bg-white p-2 text-sm text-[#6f4a33] shadow-[0_18px_36px_rgba(88,44,14,0.14)] dark:border-[#241915] dark:bg-black dark:text-white">
                             <ul aria-labelledby="resourcesFilterButton">
-                                <li><a href="#" class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos os ficheiros</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">PDF</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Video</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">MP3</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Livros</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Slides</a></li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos
+                                        os ficheiros</a></li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">PDF</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Video</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">MP3</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Livros</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Slides</a>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -131,20 +148,38 @@
                             class="z-10 hidden w-44 rounded-2xl border border-[#f3e4d8] bg-white p-2 text-sm text-[#6f4a33] shadow-[0_18px_36px_rgba(88,44,14,0.14)] dark:border-[#241915] dark:bg-black dark:text-white">
                             <ul aria-labelledby="resourceTypeButton">
                                 <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Fisicos</a></li>
-                                <li><a href="#" class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Digitais</a></li>
+                                        class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Fisicos</a>
+                                </li>
+                                <li><a href="#"
+                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Digitais</a>
+                                </li>
                             </ul>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="relative mt-6 grid items-start gap-5 sm:gap-6 xl:grid-cols-2 xl:gap-8">
-                @foreach ($resourceCards as $resource)
-                    <x-resource-card :resource="$resource" />
-                @endforeach
-            </div>
+            @if ($resourceCards->isEmpty())
+                <div
+                    class="relative mt-6 rounded-2xl border border-[#f3e4d8] bg-white p-6 text-center text-sm font-semibold text-[#7a5c4a] dark:border-[#241915] dark:bg-black dark:text-[#d5c7be]">
+                    Nenhum recurso encontrado.
+                </div>
+            @else
+                <div class="relative mt-6 grid items-start gap-5 sm:gap-6 xl:grid-cols-2 xl:gap-8">
+                    @foreach ($resourceCards as $resource)
+                        <x-resources.resource-card :resource="$resource" />
+                    @endforeach
+                </div>
+            @endif
+
+            @if (method_exists($resources, 'links'))
+                <div class="relative mt-8">
+                    {{ $resources->links() }}
+                </div>
+            @endif
         </section>
     </main>
 

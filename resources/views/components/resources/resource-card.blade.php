@@ -1,7 +1,7 @@
 @props(['resource'])
 
 @php
-    $accessUrl = auth()->check() ? '#' : route('login');
+    $accessUrl = auth()->check() ? route('resources.show', $resource['id']) : route('login');
 @endphp
 
 <article
@@ -29,7 +29,8 @@
             </div>
 
             <div>
-                <p class="whitespace-pre-line text-[1.1rem] font-semibold leading-[1.15] tracking-tight sm:text-[1.25rem]">
+                <p
+                    class="whitespace-pre-line text-[1.1rem] font-semibold leading-[1.15] tracking-tight sm:text-[1.25rem]">
                     {{ $resource['cover_title'] }}
                 </p>
                 <p class="mt-3 text-[10px] uppercase tracking-[0.28em] text-white/75">
@@ -43,7 +44,8 @@
         <div class="flex-1">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                    <h2 class="break-words text-lg font-semibold leading-tight text-[#2c1c13] dark:text-white sm:text-xl">
+                    <h2
+                        class="break-words text-lg font-semibold leading-tight text-[#2c1c13] dark:text-white sm:text-xl">
                         {{ $resource['title'] }}
                     </h2>
                     <p class="mt-1 text-sm font-medium uppercase tracking-[0.14em] text-[#FE6807]">
