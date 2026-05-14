@@ -33,7 +33,7 @@ class UserController extends Controller
      */
     public function create(): View
     {
-        return view('users.create');
+        return view('auth.register');
     }
 
     /**

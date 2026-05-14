@@ -8,7 +8,8 @@ use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [ResourceController::class, 'library'])->name('library');
+Route::get('/', [ResourceController::class, 'index'])->name('index');
+Route::get('/library', [ResourceController::class, 'library'])->name('library');
 Route::get('/mine', [ResourceController::class, 'mine'])->name('mine');
 Route::get('/favorites', [ResourceController::class, 'favorites'])->name('favorites');
 Route::get('/categories', [ResourceController::class, 'categories'])->name('categories');
@@ -17,6 +18,9 @@ Route::middleware('guest')->group(function () {
     Route::controller(LoginController::class)->group(function () {
         Route::get('/login', 'create')->name('login');
         Route::post('/login', 'store')->name('login.store');
+        Route::get('/forgot-password', function () {
+            return view('users.forgot-password');
+        })->name('password.request');
     });
 
     Route::controller(UserController::class)->group(function () {
@@ -26,7 +30,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
-    Route::get('/home', [ResourceController::class, 'library'])->name('home');
+    Route::get('/home', [ResourceController::class, 'index'])->name('home');
 
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('{user}/edit', 'edit')->name('edit');

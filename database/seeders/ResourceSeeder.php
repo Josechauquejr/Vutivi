@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\DigitalResource;
+use App\Models\PhysicalResource;
 use App\Models\Resource;
 use App\Models\User;
-use App\Models\PhysicalResource;
-use App\Models\DigitalResource;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -14,174 +14,193 @@ class ResourceSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Popula a base de dados com recursos fictícios.
+     * Popula a base de dados com recursos ficticios para a biblioteca.
      */
     public function run(): void
     {
-        // Criar alguns usuários adicionais se não existirem
-        $users = User::all();
-        if ($users->isEmpty()) {
-            $users = collect([
-                User::factory()->create(['name' => 'João Silva', 'username' => 'joao.silva']),
-                User::factory()->create(['name' => 'Maria Santos', 'username' => 'maria.santos']),
-                User::factory()->create(['name' => 'Pedro Oliveira', 'username' => 'pedro.oliveira']),
-            ]);
-        }
-
-        // Recursos digitais
-        $digitalResources = [
+        $owner = User::firstOrCreate(
+            ['email' => 'biblioteca@vutivi.test'],
             [
-                'title' => 'Relatório Anual 2024',
-                'description' => 'Documento completo com os resultados financeiros, estratégias e metas atingidas ao longo de 2024.',
-                'type' => 'digital',
-                'status' => 'available',
-                'quantity_available' => 1,
-                'owner_id' => $users->random()->id,
+                'name' => 'Equipa Biblioteca',
+                'username' => 'equipa.biblioteca',
+                'password' => 'password',
+            ]
+        );
+
+        $resources = [
+            [
+                'resource' => [
+                    'title' => 'Guia do Investidor',
+                    'description' => 'Resumo pratico com principios de investimento, perguntas de revisao e checkpoints para acompanhar a leitura.',
+                    'type' => 'digital',
+                    'status' => 'available',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
                 'digital' => [
-                    'file_path' => 'reports/annual_2024.pdf',
+                    'file_path' => 'biblioteca/guia-do-investidor.pdf',
                     'access_type' => 'download',
+                    'access_days' => 18,
+                ],
+            ],
+            [
+                'resource' => [
+                    'title' => 'Linha do Tempo da Lideranca',
+                    'description' => 'Slides com eventos-chave, contexto historico e notas curtas para revisar lideranca e impacto social.',
+                    'type' => 'digital',
+                    'status' => 'active',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
+                'digital' => [
+                    'file_path' => 'biblioteca/linha-do-tempo-lideranca.pptx',
+                    'access_type' => 'view',
+                    'access_days' => 12,
+                ],
+            ],
+            [
+                'resource' => [
+                    'title' => 'Podcast de Aprendizagem',
+                    'description' => 'Audio curto com comentarios de estudo, exemplos e ideias para revisao individual.',
+                    'type' => 'digital',
+                    'status' => 'available',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
+                'digital' => [
+                    'file_path' => 'biblioteca/podcast-aprendizagem.mp3',
+                    'access_type' => 'view',
                     'access_days' => 7,
-                ]
+                ],
             ],
             [
-                'title' => 'Manual de Utilizador',
-                'description' => 'Guia completo de utilização do sistema, com exemplos práticos e resolução de problemas comuns.',
-                'type' => 'digital',
-                'status' => 'available',
-                'quantity_available' => 1,
-                'owner_id' => $users->random()->id,
+                'resource' => [
+                    'title' => 'Analise da Partida',
+                    'description' => 'Video com resumo de jogadas, leitura tatica e anotacoes para estudar decisoes em momentos de pressao.',
+                    'type' => 'digital',
+                    'status' => 'available',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
                 'digital' => [
-                    'file_path' => 'manuals/user_guide.docx',
-                    'access_type' => 'download',
-                    'access_days' => 14,
-                ]
-            ],
-            [
-                'title' => 'Apresentação Q3',
-                'description' => 'Slides com os resultados trimestrais de vendas, análise de mercado e projecções para o Q4 2024.',
-                'type' => 'digital',
-                'status' => 'reserved',
-                'quantity_available' => 0,
-                'owner_id' => $users->random()->id,
-                'digital' => [
-                    'file_path' => 'presentations/q3_results.pptx',
+                    'file_path' => 'biblioteca/analise-da-partida.mp4',
                     'access_type' => 'view',
-                    'access_days' => 5,
-                ]
+                    'access_days' => 24,
+                ],
             ],
             [
-                'title' => 'Tutorial de Formação',
-                'description' => 'Vídeo de formação sobre as melhores práticas de gestão de projectos e metodologias ágeis.',
-                'type' => 'digital',
-                'status' => 'active',
-                'quantity_available' => 0,
-                'owner_id' => $users->random()->id,
+                'resource' => [
+                    'title' => 'Arquivo de Legado',
+                    'description' => 'Conjunto de notas, referencias e documentos comentados para consultas rapidas sobre lideranca.',
+                    'type' => 'digital',
+                    'status' => 'reserved',
+                    'quantity_available' => 0,
+                    'owner_id' => $owner->id,
+                ],
                 'digital' => [
-                    'file_path' => 'videos/training_tutorial.mp4',
-                    'access_type' => 'view',
-                    'access_days' => 3,
-                ]
-            ],
-            [
-                'title' => 'Base de Dados Clientes',
-                'description' => 'Planilha com todos os dados dos clientes activos, histórico de compras e contactos actualizados.',
-                'type' => 'digital',
-                'status' => 'available',
-                'quantity_available' => 1,
-                'owner_id' => $users->random()->id,
-                'digital' => [
-                    'file_path' => 'data/client_database.xlsx',
+                    'file_path' => 'biblioteca/arquivo-de-legado.zip',
                     'access_type' => 'download',
-                    'access_days' => 10,
-                ]
+                    'access_days' => 21,
+                ],
             ],
             [
-                'title' => 'Pacote de Instalação v3.0',
-                'description' => 'Arquivo comprimido com todos os ficheiros necessários para instalação do sistema na versão 3.0.',
-                'type' => 'digital',
-                'status' => 'reserved',
-                'quantity_available' => 0,
-                'owner_id' => $users->random()->id,
-                'digital' => [
-                    'file_path' => 'software/installer_v3.0.zip',
-                    'access_type' => 'download',
-                    'access_days' => 30,
-                ]
-            ],
-        ];
-
-        // Recursos físicos
-        $physicalResources = [
-            [
-                'title' => 'Projetor Multimédia',
-                'description' => 'Projetor Full HD com 4000 lumens, ideal para apresentações e treinamentos.',
-                'type' => 'physical',
-                'status' => 'available',
-                'quantity_available' => 2,
-                'owner_id' => $users->random()->id,
+                'resource' => [
+                    'title' => 'Livro Introducao a Programacao',
+                    'description' => 'Livro fisico para consulta guiada, exercicios introdutorios e fundamentos de logica de programacao.',
+                    'type' => 'physical',
+                    'status' => 'available',
+                    'quantity_available' => 4,
+                    'owner_id' => $owner->id,
+                ],
                 'physical' => [
-                    'location' => 'Sala de Reuniões A',
-                    'max_loan_days' => 7,
-                    'condition' => 'Excelente',
-                ]
-            ],
-            [
-                'title' => 'Laptop Dell XPS 13',
-                'description' => 'Laptop ultrabook com processador Intel i7, 16GB RAM e SSD 512GB.',
-                'type' => 'physical',
-                'status' => 'available',
-                'quantity_available' => 1,
-                'owner_id' => $users->random()->id,
-                'physical' => [
-                    'location' => 'Escritório 204',
+                    'location' => 'Estante A1',
                     'max_loan_days' => 14,
                     'condition' => 'Bom',
-                ]
+                ],
             ],
             [
-                'title' => 'Câmera DSLR Canon',
-                'description' => 'Câmera profissional com lente 18-55mm, ideal para fotografias e vídeos.',
-                'type' => 'physical',
-                'status' => 'reserved',
-                'quantity_available' => 0,
-                'owner_id' => $users->random()->id,
+                'resource' => [
+                    'title' => 'Atividades de Leitura',
+                    'description' => 'Colecao impressa de exercicios, perguntas guiadas e dinamicas simples para leitura em grupo.',
+                    'type' => 'physical',
+                    'status' => 'available',
+                    'quantity_available' => 9,
+                    'owner_id' => $owner->id,
+                ],
                 'physical' => [
-                    'location' => 'Armário de Equipamentos',
-                    'max_loan_days' => 5,
+                    'location' => 'Sala de Apoio',
+                    'max_loan_days' => 7,
                     'condition' => 'Excelente',
-                ]
+                ],
             ],
             [
-                'title' => 'Microfone sem fio',
-                'description' => 'Microfone profissional sem fio com alcance de 100 metros.',
-                'type' => 'physical',
-                'status' => 'available',
-                'quantity_available' => 3,
-                'owner_id' => $users->random()->id,
+                'resource' => [
+                    'title' => 'Checklist de Trilha',
+                    'description' => 'Guia impresso com checklist de equipamentos, seguranca e preparacao fisica para consultas rapidas.',
+                    'type' => 'physical',
+                    'status' => 'active',
+                    'quantity_available' => 3,
+                    'owner_id' => $owner->id,
+                ],
                 'physical' => [
-                    'location' => 'Sala de Equipamentos',
-                    'max_loan_days' => 3,
-                    'condition' => 'Bom',
-                ]
+                    'location' => 'Arquivo de Campo',
+                    'max_loan_days' => 5,
+                    'condition' => 'Novo',
+                ],
+            ],
+            [
+                'resource' => [
+                    'title' => 'Manual de Utilizador',
+                    'description' => 'Documento pratico com exemplos de uso, fluxos principais e orientacoes para resolver problemas comuns.',
+                    'type' => 'digital',
+                    'status' => 'available',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
+                'digital' => [
+                    'file_path' => 'biblioteca/manual-de-utilizador.docx',
+                    'access_type' => 'download',
+                    'access_days' => 14,
+                ],
+            ],
+            [
+                'resource' => [
+                    'title' => 'Planilha de Inventario',
+                    'description' => 'Ficheiro de controlo com lista de materiais, quantidades, categorias e observacoes de manutencao.',
+                    'type' => 'digital',
+                    'status' => 'available',
+                    'quantity_available' => 1,
+                    'owner_id' => $owner->id,
+                ],
+                'digital' => [
+                    'file_path' => 'biblioteca/planilha-de-inventario.xlsx',
+                    'access_type' => 'download',
+                    'access_days' => 10,
+                ],
             ],
         ];
 
-        // Criar recursos digitais
-        foreach ($digitalResources as $resourceData) {
-            $digitalData = $resourceData['digital'];
-            unset($resourceData['digital']);
+        foreach ($resources as $resourceData) {
+            $resource = Resource::updateOrCreate(
+                ['title' => $resourceData['resource']['title']],
+                $resourceData['resource']
+            );
 
-            $resource = Resource::create($resourceData);
-            DigitalResource::create(array_merge($digitalData, ['resource_id' => $resource->id]));
-        }
+            if (isset($resourceData['digital'])) {
+                $resource->physicalResource()->delete();
+                DigitalResource::updateOrCreate(
+                    ['resource_id' => $resource->id],
+                    $resourceData['digital'] + ['resource_id' => $resource->id]
+                );
+            }
 
-        // Criar recursos físicos
-        foreach ($physicalResources as $resourceData) {
-            $physicalData = $resourceData['physical'];
-            unset($resourceData['physical']);
-
-            $resource = Resource::create($resourceData);
-            PhysicalResource::create(array_merge($physicalData, ['resource_id' => $resource->id]));
+            if (isset($resourceData['physical'])) {
+                $resource->digitalResource()->delete();
+                PhysicalResource::updateOrCreate(
+                    ['resource_id' => $resource->id],
+                    $resourceData['physical'] + ['resource_id' => $resource->id]
+                );
+            }
         }
     }
 }

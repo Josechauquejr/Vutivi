@@ -14,11 +14,7 @@ class ResourceController extends Controller
      */
     public function index()
     {
-        $resources = Resource::with(['owner', 'physicalResource', 'digitalResource'])
-            ->latest()
-            ->paginate(10);
-
-        return view('resources.index', compact('resources'));
+        return view('index');
     }
 
     /**
@@ -26,10 +22,11 @@ class ResourceController extends Controller
      */
     public function library()
     {
-        return view('home', [
-            'pageTitle' => 'Biblioteca de Recursos',
-            'resources' => $this->libraryResources(),
-        ]);
+        $resources = Resource::with(['owner', 'physicalResource', 'digitalResource'])
+            ->latest()
+            ->paginate(10);
+
+        return view('library', compact('resources'));
     }
 
     /**

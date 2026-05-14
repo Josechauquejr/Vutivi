@@ -30,6 +30,14 @@ class LoginRequest extends FormRequest
         ];
     }
 
+    public function messages(): array
+    {
+        return [
+            'username.required' => 'Informe o username.',
+            'password.required' => 'Informe a password.',
+        ];
+    }
+
     public function credentials(): array
     {
         // A acao deve depender de um contrato pequeno de dados, nao do request HTTP inteiro.
