@@ -50,4 +50,12 @@ class Resource extends Model
     {
         return $this->hasMany(Reservation::class);
     }
+
+    /**
+     * Retorna os termos e condições deste recurso.
+     */
+    public function terms()
+    {
+        return $this->hasMany(TermAndCondition::class);
+    }
 }
