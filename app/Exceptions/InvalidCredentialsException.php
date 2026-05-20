@@ -11,6 +11,6 @@ class InvalidCredentialsException extends RuntimeException
 {
     public static function create(): self
     {
-        return new self('Usuario ou senha invalidos. Tente novamente.');
+        return new self('Credenciais invalidas.');
     }
 }

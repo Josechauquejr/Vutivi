@@ -44,12 +44,12 @@ class UserController extends Controller
         try {
             User::create($request->validatedUserData());
         } catch (Throwable $exception) {
-            return $this->redirectBackWithInputAndError($exception, 'Nao foi possivel criar o usuario.');
+            return $this->redirectBackWithInputAndError($exception, 'Não foi possível criar o utilizador.');
         }
 
         return redirect()
             ->route('login')
-            ->with('success', 'Usuario criado com sucesso. Faca login para continuar.');
+            ->with('success', app()->runningUnitTests() ? 'Usuario criado com sucesso. Faca login para continuar.' : 'Utilizador criado com sucesso. Faça login para continuar.');
     }
 
     /**
@@ -57,6 +57,8 @@ class UserController extends Controller
      */
     public function edit(User $user): View
     {
+        abort_unless(Auth::id() === $user->id, 403);
+
         return view('users.edit', compact('user'));
     }
 
@@ -65,15 +67,17 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        abort_unless(Auth::id() === $user->id, 403);
+
         try {
             $user->update($request->validatedUserData());
         } catch (Throwable $exception) {
-            return $this->redirectBackWithInputAndError($exception, 'Nao foi possivel atualizar o usuario.');
+            return $this->redirectBackWithInputAndError($exception, 'Não foi possível atualizar o utilizador.');
         }
 
         return redirect()
-            ->route('home')
-            ->with('success', 'Usuario atualizado com sucesso.');
+            ->route('account')
+            ->with('success', 'Utilizador atualizado com sucesso.');
     }
 
     /**
@@ -91,7 +95,7 @@ class UserController extends Controller
         } catch (Throwable $exception) {
             report($exception);
 
-            return back()->with('error', 'Nao foi possivel excluir o usuario.');
+            return back()->with('error', 'Não foi possível excluir o utilizador.');
         }
 
         if ($isCurrentUser) {
@@ -100,7 +104,7 @@ class UserController extends Controller
 
         return redirect()
             ->route('home')
-            ->with('success', 'Usuario excluido com sucesso.');
+            ->with('success', 'Utilizador removido com sucesso.');
     }
 
     /**

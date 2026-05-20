@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 /**
  * Valida a criação de uma nova requisição de recurso.
  */
-class StoreReservationRequest extends FormRequest
+class StoreReservationTermsRequest extends FormRequest
 {
     public function authorize(): bool
     {

@@ -1,0 +1,165 @@
+Organize a sidebar:
+
+* use icons do feather icons de preferencia , caso não consiga use heroicons e hugeicons
+* organize em dropdowns
+* coloque tabs organizadas por emprestimos tambem, para emprestimos que fizeste e para recursos teus emprestados
+* crei um tab para minha conta
+* coloque uma tabs para ver notificações de emprestimos que estão proximos de acabar o prazo de emprestimos
+
+
+
+Organiza a biblioteca:
+
+* Os dropdows de filtros devem funcionar para poder procurar os ficheiros
+* Coloque um paginate para limitar a vista de recursos
+* para ficheiros digitais ele não vão precisar de tempo de devolução, mas podem ter limitações para visualização e outros para downloads
+* o dono dos recursos deve poder fazer o crud de recursos que adicionou
+* deve ser possivel adiconar recursos
+* a nav bar e sidebar devem estar em concordancia porpocionado uma boa UI UX para os usuarios
+* colocação em pratica dos termos e condições para recursos fisicos
+
+
+
+Organize a pagina index:
+
+* A página inicial deve seguir a mesma abordagem estrutural e comportamental utilizada por plataformas SaaS modernas como a Meridian, porém adaptada para uma biblioteca digital e física de recursos. A experiência deve transmitir imediatamente organização, inteligência, confiança e acessibilidade. A homepage deve parecer mais do que um simples sistema de ficheiros: ela deve parecer um ecossistema inteligente de gestão e descoberta de conhecimento.
+
+* A hero section deve ser visualmente forte e emocionalmente acolhedora, utilizando uma headline clara e objetiva relacionada a descoberta, compartilhamento e gestão de recursos. Abaixo da headline deve existir uma subheadline explicando rapidamente o propósito da plataforma e um CTA principal evidente como “Explorar Biblioteca”, “Adicionar Recurso” ou “Começar”.
+
+* A primeira dobra deve conter mockups ou previews reais do sistema, incluindo cards de livros, documentos, recursos digitais, estatísticas de empréstimos e gráficos leves de utilização. O objetivo é fazer o utilizador visualizar imediatamente como os recursos estão organizados e como a plataforma facilita o acesso ao conhecimento.
+
+* A homepage deve utilizar uma narrativa visual progressiva:
+
+  1. descoberta de recursos,
+  2. organização inteligente,
+  3. gestão de empréstimos,
+  4. colaboração entre utilizadores,
+  5. acesso rápido aos recursos,
+  6. notificações e controlo de prazos.
+
+* A arquitetura visual deve transmitir uma identidade de biblioteca moderna:
+
+  * uso equilibrado de dark/light mode,
+  * cards organizados em grids,
+  * aparência limpa,
+  * bordas suaves,
+  * espaços bem distribuídos,
+  * sensação de silêncio visual e foco,
+  * tipografia altamente legível,
+  * ícones minimalistas,
+  * elementos que remetam a leitura, organização e arquivo.
+
+* O sistema deve parecer uma mistura entre:
+
+  * biblioteca moderna,
+  * dashboard SaaS,
+  * gestor de documentos,
+  * sistema académico,
+  * plataforma colaborativa.
+
+* A homepage deve possuir secções organizadas como:
+
+  * recursos mais recentes,
+  * recursos populares,
+  * categorias,
+  * recursos digitais,
+  * livros físicos,
+  * recursos emprestados recentemente,
+  * atividade recente,
+  * recomendações,
+  * estatísticas rápidas,
+  * notificações importantes.
+
+* Deve existir uma área de pesquisa extremamente acessível logo no topo da página, permitindo:
+
+  * pesquisa textual,
+  * filtros rápidos,
+  * categorias,
+  * tags,
+  * tipo de recurso,
+  * disponibilidade,
+  * autor,
+  * data.
+
+* A estrutura deve priorizar descoberta rápida e navegação simples. O utilizador deve sentir que consegue encontrar qualquer recurso em poucos segundos.
+
+* A interface deve utilizar UX baseada em comportamento real de bibliotecas:
+
+  * recursos destacados visualmente,
+  * estados claros de disponibilidade,
+  * indicadores de empréstimo,
+  * datas visíveis,
+  * badges de categoria,
+  * limite visual de informações por card,
+  * previews organizados.
+
+* Os cards dos recursos devem transmitir imediatamente:
+
+  * tipo do recurso,
+  * disponibilidade,
+  * proprietário,
+  * estado de empréstimo,
+  * formato,
+  * permissões de acesso,
+  * opções rápidas de ação.
+
+* A homepage deve seguir uma hierarquia visual forte:
+
+  1. pesquisa,
+  2. descoberta,
+  3. recursos em destaque,
+  4. ações rápidas,
+  5. empréstimos,
+  6. atividade,
+  7. gestão pessoal.
+
+* O design deve passar sensação de confiança institucional e modernidade tecnológica ao mesmo tempo.
+
+* O sistema deve evitar aparência excessivamente corporativa ou fria. A experiência deve parecer humana, organizada e focada em conhecimento.
+
+* A navegação deve ser linear e intuitiva, reduzindo distrações e priorizando acesso rápido aos conteúdos.
+
+* A plataforma deve possuir microinterações suaves:
+
+  * hover states,
+  * animações discretas,
+  * feedback visual de ações,
+  * transições suaves,
+  * skeleton loaders,
+  * notificações elegantes.
+
+* A interface deve ser pensada para escalabilidade, permitindo futuramente:
+
+  * múltiplas bibliotecas,
+  * departamentos,
+  * instituições,
+  * IA para recomendações,
+  * analytics de utilização,
+  * rankings de recursos.
+
+* A experiência geral deve transmitir:
+  “Esta é uma biblioteca moderna, inteligente, organizada e eficiente para gestão e descoberta de conhecimento.”
+
+
+
+UI and UX
+
+* dont use placeholders as labels in text fields
+* use input masks in fiels to guide users
+* use skeletons to loading instead of classic one
+* priorize important informatins
+* align fiels with the type of informations you are  asking the user to input
+* allow users to both type a search and scroll
+* stick to one primary button per actions
+* display all options when the user has to select 2 to 3 values
+* limit color saturation in dark mode
+* decrease the shape for the inner elements for a better look
+* use toggle tokens in a large list
+* ajust spacing to make related groups feel connected
+* use placehold to give hint to users in the search bar
+* use consistent gaps to enhace the quality of your interface grids
+* read more button for long texts
+* keep the style consistent
+* jakobs law : users expect what they already know
+* the app must look like a library, more than anything
+* buttons with icons

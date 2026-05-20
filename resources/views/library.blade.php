@@ -1,26 +1,28 @@
 <!doctype html>
 <html lang="pt">
 
-<x-head title="Biblioteca de Recursos" />
+<x-head title="{{ $pageTitle ?? 'Biblioteca' }}" />
 
 @php
     $resourceItems = collect(method_exists($resources, 'items') ? $resources->items() : $resources);
     $totalResources = method_exists($resources, 'total') ? $resources->total() : $resourceItems->count();
-    $pageTitle = $pageTitle ?? 'Recursos';
+    $pageTitle = $pageTitle ?? 'Biblioteca';
     $pageEyebrow = $pageEyebrow ?? 'Biblioteca';
-    $pageDescription = $pageDescription ?? 'Um espaco com recursos de leitura, estudo e apoio visual em vez de somente livros, com cards mais uniformes.';
+    $pageDescription = $pageDescription ?? 'Recursos fisicos e digitais organizados para descoberta rapida.';
+    $showOwnerActions = $showOwnerActions ?? false;
+    $activeTab = $activeTab ?? null;
 
     $coverClasses = [
-        'from-[#2a1813] via-[#5d3528] to-[#ba9872]',
-        'from-[#5b2b75] via-[#8c5ac9] to-[#f1cf61]',
-        'from-[#8eb7d8] via-[#cfe3ef] to-[#f6edd7]',
-        'from-[#205b8c] via-[#4f99db] to-[#f3b84b]',
-        'from-[#3b6f8b] via-[#8ab6c8] to-[#f0db92]',
-        'from-[#1c1c1c] via-[#434343] to-[#c8a76a]',
+        'from-[#263238] via-[#526d5b] to-[#d9bd8b]',
+        'from-[#1f2933] via-[#4b6584] to-[#b8d8d8]',
+        'from-[#3f342b] via-[#7b6047] to-[#ead7b7]',
+        'from-[#25324a] via-[#60708e] to-[#e1c16e]',
+        'from-[#2f3a32] via-[#72836e] to-[#dfd6b8]',
+        'from-[#252525] via-[#57534e] to-[#c6a664]',
     ];
 
     $statusLabels = [
-        'available' => 'Disponivel',
+        'available' => 'Disponível',
         'reserved' => 'Reservado',
         'active' => 'Em uso',
     ];
@@ -29,7 +31,8 @@
         'pdf' => 'PDF',
         'mp4' => 'Video',
         'mov' => 'Video',
-        'mp3' => 'MP3',
+        'webm' => 'Video',
+        'mp3' => 'Audio',
         'ppt' => 'Slides',
         'pptx' => 'Slides',
         'doc' => 'Documento',
@@ -39,136 +42,148 @@
         'zip' => 'Arquivo',
     ];
 
-    $resourceCards = $resourceItems->values()->map(function ($resource, $index) use ($coverClasses, $statusLabels, $fileTypeLabels) {
+    $resourceCards = $resourceItems->values()->map(function ($resource, $index) use ($coverClasses, $statusLabels, $fileTypeLabels, $showOwnerActions) {
         $isDigital = $resource->type === 'digital';
         $path = $resource->digitalResource?->file_path;
         $extension = $path ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : null;
-        $fileType = $isDigital ? ($fileTypeLabels[$extension] ?? strtoupper($extension ?: 'Digital')) : 'Livro';
+        $fileType = $isDigital ? ($fileTypeLabels[$extension] ?? strtoupper($extension ?: 'Digital')) : 'Livro fisico';
+        $accessType = $resource->digitalResource?->access_type === 'download' ? 'Download permitido' : 'Somente visualização';
         $meta = $isDigital
-            ? ($resource->digitalResource?->access_days . ' dias de acesso')
-            : ($resource->quantity_available . ' disponiveis');
-        $category = $isDigital ? $fileType : 'Livros';
+            ? $accessType . ' sem prazo de devolução'
+            : (($resource->physicalResource?->max_loan_days ?? 0) . ' dias de empréstimo');
         $titleWords = preg_split('/\s+/', trim($resource->title));
-        $coverTitle = collect($titleWords)->take(3)->implode(' ');
 
         return [
             'id' => $resource->id,
             'title' => $resource->title,
+            'type' => $resource->type,
             'type_label' => $isDigital ? 'Recurso digital' : 'Recurso fisico',
             'file_type_label' => $fileType,
-            'category_label' => $category,
-            'resource_kind_label' => $isDigital ? 'Digital' : 'Fisico',
+            'category_label' => $isDigital ? $fileType : 'Biblioteca fisica',
+            'resource_kind_label' => $isDigital ? 'Digital' : 'Físico',
             'meta' => $meta,
             'description' => $resource->description,
+            'owner' => $resource->owner?->name ?? 'Não definido',
             'cover_class' => $coverClasses[$index % count($coverClasses)],
-            'cover_title' => wordwrap(strtoupper($coverTitle), 12, "\n", true),
+            'cover_image' => $resource->cover_image,
+            'cover_title' => wordwrap(strtoupper(collect($titleWords)->take(3)->implode(' ')), 12, "\n", true),
             'cover_author' => strtoupper($resource->owner?->name ?? 'VUTIVI'),
             'tag' => $isDigital ? $fileType : 'Livro',
             'status' => $statusLabels[$resource->status] ?? ucfirst($resource->status),
+            'available_count' => (int) $resource->quantity_available,
+            'can_manage' => auth()->check() && (int) $resource->owner_id === (int) auth()->id(),
+            'is_favorited' => (bool) ($resource->is_favorited ?? false),
+            'favorites_count' => (int) ($resource->favorites_count ?? 0),
+            'downloads_count' => (int) ($resource->downloads_count ?? 0),
+            'loans_count' => (int) ($resource->loans_count ?? 0),
+            'show_owner_actions' => $showOwnerActions,
+            'show_route' => $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id),
+            'edit_route' => $isDigital ? route('digital-resources.edit', $resource->id) : route('physical-resources.edit', $resource->id),
+            'delete_route' => $isDigital ? route('digital-resources.destroy', $resource->id) : route('physical-resources.destroy', $resource->id),
+            'favorite_route' => route('resources.favorite', $resource->id),
+            'terms_route' => ! $isDigital ? route('reservations.terms.show', $resource->id) : null,
         ];
     });
+
 @endphp
 
-<body class="home-layout bg-white dark:bg-black">
+<body class="home-layout bg-[#fbfaf7] dark:bg-[#050505]">
     <x-navbar />
 
-    <main class="item bg-white px-3 pb-10 pt-4 dark:bg-black sm:px-5 sm:pb-14 md:px-6 lg:px-8">
-        <section
-            class="relative mx-auto max-w-7xl overflow-hidden rounded-2xl border border-white/70 bg-white/90 p-4 shadow-[0_28px_70px_rgba(254,104,7,0.12)] backdrop-blur dark:border-[#241915] dark:bg-[#050505]/95 dark:shadow-[0_28px_70px_rgba(0,0,0,0.42)] sm:rounded-[28px] sm:p-5 md:p-8 xl:max-w-[88rem]">
-            <div class="pointer-events-none absolute -right-12 top-0 h-40 w-40 rounded-full bg-[#FE6807]/10 blur-3xl">
-            </div>
-            <div class="pointer-events-none absolute -left-10 bottom-0 h-32 w-32 rounded-full bg-[#fe6807]/8 blur-3xl">
-            </div>
+    <main class="item px-3 pb-10 pt-4 sm:px-5 sm:pb-14 md:px-6 lg:px-8">
+        <x-breadcrumbs :items="[['label' => $pageTitle]]" />
+        <section class="mx-auto max-w-7xl xl:max-w-[88rem]">
+            <div class="surface-card p-4 dark:border-[#27211a] dark:bg-[#090909] sm:p-5 md:p-6">
+                <div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                    <div class="min-w-0">
+                        <p class="text-xs font-semibold uppercase tracking-[0.32em] text-[#9b6b3f]">{{ $pageEyebrow }}</p>
+                        <h1 class="mt-2 text-2xl font-semibold text-[#241b14] dark:text-white sm:text-3xl md:text-4xl">{{ $pageTitle }}</h1>
+                        <p class="mt-2 max-w-3xl text-sm leading-6 text-[#66594d] dark:text-[#cfc5ba]">{{ $pageDescription }}</p>
+                    </div>
 
-            <div
-                class="relative flex flex-col gap-5 border-b border-[#f3e4d8] pb-6 dark:border-[#241915] sm:flex-row sm:items-end sm:justify-between">
-                <div class="min-w-0">
-                    <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#c97d46]">{{ $pageEyebrow }}</p>
-                    <h1 class="mt-3 text-2xl font-semibold text-[#2c1c13] dark:text-white sm:text-3xl md:text-4xl">
-                        {{ $pageTitle }}</h1>
-                    <p class="mt-2 max-w-2xl text-sm leading-6 text-[#7a5c4a] dark:text-[#d5c7be]">
-                        {{ $pageDescription }}
-                    </p>
+                    @auth
+                        <div class="flex flex-wrap gap-2">
+                            <a href="{{ route('resources.create') }}" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-[#FE6807] px-4 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(254,104,7,0.2)] transition hover:bg-[#e15f07]">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                                Adicionar recurso
+                            </a>
+                        </div>
+                    @endauth
                 </div>
 
-                <div
-                    class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end xl:w-auto xl:flex-nowrap">
-                    <div
-                        class="inline-flex min-h-11 w-full items-center justify-center gap-3 rounded-full border border-[#ffd8bf] bg-[#fff4ec] px-4 text-sm font-medium text-[#9f5627] shadow-[0_12px_24px_rgba(254,104,7,0.10)] dark:border-[#4a2a1b] dark:bg-[#120d0a] dark:text-[#ffb07a] sm:w-auto sm:justify-start xl:px-5">
-                        <span class="flex h-2.5 w-2.5 rounded-full bg-[#FE6807]"></span>
-                        <span>{{ $totalResources }} recursos disponiveis</span>
-                    </div>
-
-                    <div class="relative w-full sm:w-auto">
-                        <button id="resourcesFilterButton" data-dropdown-toggle="resourcesFilterDropdown" type="button"
-                            class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#ffd8bf] bg-white px-4 text-sm font-semibold text-[#7d4a2b] shadow-[0_10px_22px_rgba(88,44,14,0.08)] transition hover:border-[#ffc7a0] hover:bg-[#fff7f0] dark:border-[#4a2a1b] dark:bg-black dark:text-white dark:hover:border-[#FE6807] dark:hover:bg-[#120d0a] sm:w-auto xl:px-5">
-                            <span>Categorias de ficheiro</span>
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </button>
-
-                        <div id="resourcesFilterDropdown"
-                            class="z-10 hidden w-48 rounded-2xl border border-[#f3e4d8] bg-white p-2 text-sm text-[#6f4a33] shadow-[0_18px_36px_rgba(88,44,14,0.14)] dark:border-[#241915] dark:bg-black dark:text-white">
-                            <ul aria-labelledby="resourcesFilterButton">
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos
-                                        os ficheiros</a></li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">PDF</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Video</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">MP3</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Livros</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Slides</a>
-                                </li>
-                            </ul>
+                <form action="{{ url()->current() }}" method="GET" class="mt-6 grid gap-3 lg:grid-cols-[minmax(260px,1.6fr)_repeat(5,minmax(130px,1fr))_auto]">
+                    <label class="lg:col-span-2">
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Pesquisar</span>
+                        <div class="field-shell">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            <input data-smart-search type="search" name="q" value="{{ request('q') }}" placeholder="Titulo, autor, tag ou descricao" class="premium-input text-sm placeholder:text-[#9f8c7b] dark:placeholder:text-[#80756b]">
                         </div>
-                    </div>
+                    </label>
 
-                    <div class="relative w-full sm:w-auto">
-                        <button id="resourceTypeButton" data-dropdown-toggle="resourceTypeDropdown" type="button"
-                            class="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#ffd8bf] bg-white px-4 text-sm font-semibold text-[#7d4a2b] shadow-[0_10px_22px_rgba(88,44,14,0.08)] transition hover:border-[#ffc7a0] hover:bg-[#fff7f0] dark:border-[#4a2a1b] dark:bg-black dark:text-white dark:hover:border-[#FE6807] dark:hover:bg-[#120d0a] sm:w-auto xl:px-5">
-                            <span>Tipo de recurso</span>
-                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M5 7.5L10 12.5L15 7.5" stroke="currentColor" stroke-width="1.8"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
+                    <label>
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Tipo</span>
+                        <select name="type" class="min-h-11 w-full rounded-lg border border-[#decbb8] bg-[#fffaf5] px-3 text-sm dark:border-[#332820] dark:bg-[#050505] dark:text-white">
+                            <option value="">Todos</option>
+                            <option value="physical" @selected(request('type') === 'physical')>Físico</option>
+                            <option value="digital" @selected(request('type') === 'digital')>Digital</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Formato</span>
+                        <select name="format" class="min-h-11 w-full rounded-lg border border-[#decbb8] bg-[#fffaf5] px-3 text-sm dark:border-[#332820] dark:bg-[#050505] dark:text-white">
+                            <option value="">Todos</option>
+                            @foreach (['book' => 'Livro', 'pdf' => 'PDF', 'docx' => 'DOCX', 'mp4' => 'Video', 'mp3' => 'Audio', 'pptx' => 'Slides'] as $value => $label)
+                                <option value="{{ $value }}" @selected(request('format') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label>
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Estado</span>
+                        <select name="status" class="min-h-11 w-full rounded-lg border border-[#decbb8] bg-[#fffaf5] px-3 text-sm dark:border-[#332820] dark:bg-[#050505] dark:text-white">
+                            <option value="">Todos</option>
+                            <option value="available" @selected(request('status') === 'available')>Disponível</option>
+                            <option value="reserved" @selected(request('status') === 'reserved')>Reservado</option>
+                            <option value="active" @selected(request('status') === 'active')>Em uso</option>
+                        </select>
+                    </label>
+
+                    <label>
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Vista</span>
+                        <select name="per_page" class="min-h-11 w-full rounded-lg border border-[#decbb8] bg-[#fffaf5] px-3 text-sm dark:border-[#332820] dark:bg-[#050505] dark:text-white">
+                            @foreach ([20, 40, 60] as $size)
+                                <option value="{{ $size }}" @selected((int) request('per_page', 20) === $size)>{{ $size }}</option>
+                            @endforeach
+                        </select>
+                    </label>
+
+                    <label>
+                        <span class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Ordenar</span>
+                        <select name="sort" class="min-h-11 w-full rounded-lg border border-[#decbb8] bg-[#fffaf5] px-3 text-sm dark:border-[#332820] dark:bg-[#050505] dark:text-white">
+                            <option value="">Recentes</option>
+                            <option value="downloads" @selected(request('sort') === 'downloads')>Mais baixados</option>
+                            <option value="favorites" @selected(request('sort') === 'favorites')>Mais favoritados</option>
+                            <option value="popular" @selected(request('sort') === 'popular')>Populares</option>
+                        </select>
+                    </label>
+
+                    <div class="flex items-end gap-2">
+                        <button class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#FE6807] px-4 text-sm font-semibold text-white transition hover:bg-[#e15f07]">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                            Filtrar
                         </button>
-
-                        <div id="resourceTypeDropdown"
-                            class="z-10 hidden w-44 rounded-2xl border border-[#f3e4d8] bg-white p-2 text-sm text-[#6f4a33] shadow-[0_18px_36px_rgba(88,44,14,0.14)] dark:border-[#241915] dark:bg-black dark:text-white">
-                            <ul aria-labelledby="resourceTypeButton">
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 font-medium hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Todos</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Fisicos</a>
-                                </li>
-                                <li><a href="#"
-                                        class="block rounded-xl px-4 py-2 hover:bg-[#fff4ec] dark:hover:bg-[#171717]">Digitais</a>
-                                </li>
-                            </ul>
-                        </div>
+                        <a href="{{ url()->current() }}" class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#decbb8] px-3 text-sm font-semibold text-[#5f4632] dark:border-[#332820] dark:text-[#d8cec3]">Limpar</a>
                     </div>
-                </div>
+                </form>
             </div>
 
             @if ($resourceCards->isEmpty())
-                <div
-                    class="relative mt-6 rounded-2xl border border-[#f3e4d8] bg-white p-6 text-center text-sm font-semibold text-[#7a5c4a] dark:border-[#241915] dark:bg-black dark:text-[#d5c7be]">
-                    Nenhum recurso encontrado.
+                <div class="mt-5 rounded-2xl border border-[#eadfce] bg-white p-8 text-center text-sm font-semibold text-[#66594d] shadow-[0_18px_50px_rgba(54,39,25,0.06)] dark:border-[#27211a] dark:bg-[#090909] dark:text-[#cfc5ba]">
+                    Nenhum recurso encontrado com estes filtros.
                 </div>
             @else
-                <div class="relative mt-6 grid items-start gap-5 sm:gap-6 xl:grid-cols-2 xl:gap-8">
+                <div class="mt-5 grid items-start gap-4 lg:grid-cols-2 xl:gap-5">
                     @foreach ($resourceCards as $resource)
                         <x-resources.resource-card :resource="$resource" />
                     @endforeach
@@ -176,8 +191,26 @@
             @endif
 
             @if (method_exists($resources, 'links'))
-                <div class="relative mt-8">
-                    {{ $resources->links() }}
+                <div class="mt-6 rounded-2xl border border-[#eadfce] bg-white p-4 shadow-[0_14px_34px_rgba(54,39,25,0.06)] dark:border-[#27211a] dark:bg-[#090909]">
+                    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <p class="text-sm font-semibold text-[#66594d] dark:text-[#cfc5ba]">
+                            Página <span class="font-black text-[#FE6807]">{{ $resources->currentPage() }}</span> de <span class="font-black text-[#241b14] dark:text-white">{{ $resources->lastPage() }}</span>
+                            · {{ $resources->total() }} recursos
+                        </p>
+                        <div class="flex items-center gap-2">
+                            @if ($resources->onFirstPage())
+                                <span class="inline-flex min-h-10 items-center rounded-xl border border-[#eadfce] px-4 text-sm font-bold text-[#b7a797] opacity-60 dark:border-[#332820]">Anterior</span>
+                            @else
+                                <a href="{{ $resources->previousPageUrl() }}" class="inline-flex min-h-10 items-center rounded-xl border border-[#eadfce] px-4 text-sm font-bold text-[#5f4632] hover:border-[#FE6807] hover:text-[#FE6807] dark:border-[#332820] dark:text-[#d8cec3]">Anterior</a>
+                            @endif
+                            <div class="hidden sm:block">{{ $resources->onEachSide(1)->links() }}</div>
+                            @if ($resources->hasMorePages())
+                                <a href="{{ $resources->nextPageUrl() }}" class="inline-flex min-h-10 items-center rounded-xl bg-[#FE6807] px-4 text-sm font-bold text-white shadow-[0_12px_24px_rgba(254,104,7,0.18)] hover:bg-[#e15f07]">Próxima</a>
+                            @else
+                                <span class="inline-flex min-h-10 items-center rounded-xl bg-[#f3e4d8] px-4 text-sm font-bold text-[#b7a797] dark:bg-[#241915]">Próxima</span>
+                            @endif
+                        </div>
+                    </div>
                 </div>
             @endif
         </section>

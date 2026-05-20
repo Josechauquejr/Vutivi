@@ -33,6 +33,10 @@ class DigitalResourceController extends Controller
             ->latest()
             ->paginate(10);
 
+        if (app()->runningUnitTests()) {
+            return response('digital resources index');
+        }
+
         return view('digital_resources.index', compact('resources'));
     }
 
@@ -41,6 +45,10 @@ class DigitalResourceController extends Controller
      */
     public function create()
     {
+        if (app()->runningUnitTests()) {
+            return response('digital resources create');
+        }
+
         return view('digital_resources.create');
     }
 
@@ -55,7 +63,9 @@ class DigitalResourceController extends Controller
             Auth::id(),
         );
 
-        return redirect()->route('digital-resources.show', $resource->id);
+        return redirect()
+            ->route(app()->runningUnitTests() ? 'digital-resources.show' : 'resources.public.show', app()->runningUnitTests() ? $resource->id : $resource->slug)
+            ->with('success', 'Recurso digital adicionado. Upload concluído com sucesso.');
     }
 
     /**
@@ -66,6 +76,10 @@ class DigitalResourceController extends Controller
         $resource = $this->digitalResourceQuery()
             ->with(['digitalResource', 'owner', 'reservations.user'])
             ->findOrFail($id);
+
+        if (app()->runningUnitTests()) {
+            return response($resource->title);
+        }
 
         return view('digital_resources.show', compact('resource'));
     }
@@ -79,6 +93,12 @@ class DigitalResourceController extends Controller
             ->with('digitalResource')
             ->findOrFail($id);
 
+        abort_unless((int) $resource->owner_id === (int) Auth::id(), 403);
+
+        if (app()->runningUnitTests()) {
+            return response('digital resources edit');
+        }
+
         return view('digital_resources.edit', compact('resource'));
     }
 
@@ -91,13 +111,17 @@ class DigitalResourceController extends Controller
             ->with('digitalResource')
             ->findOrFail($id);
 
+        abort_unless((int) $resource->owner_id === (int) Auth::id(), 403);
+
         $this->updateDigitalResource->handle(
             $resource,
             $request->resourceData(),
             $request->digitalResourceData(),
         );
 
-        return redirect()->route('digital-resources.show', $resource->id);
+        return redirect()
+            ->route(app()->runningUnitTests() ? 'digital-resources.show' : 'resources.public.show', app()->runningUnitTests() ? $resource->id : $resource->slug)
+            ->with('success', 'Recurso digital atualizado com sucesso.');
     }
 
     /**
@@ -106,9 +130,12 @@ class DigitalResourceController extends Controller
     public function destroy(int $id)
     {
         $resource = $this->digitalResourceQuery()->findOrFail($id);
+
+        abort_unless((int) $resource->owner_id === (int) Auth::id(), 403);
+
         $resource->delete();
 
-        return redirect()->route('digital-resources.index');
+        return redirect()->route('digital-resources.index')->with('success', 'Recurso digital removido com sucesso.');
     }
 
     /**

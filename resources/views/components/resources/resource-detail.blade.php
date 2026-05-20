@@ -48,14 +48,14 @@
         ];
 
         $statusLabels = [
-            'available' => 'Disponivel',
+            'available' => 'Disponível',
             'reserved' => 'Reservado',
             'active' => 'Em uso',
         ];
 
         $accessTypeLabels = [
             'download' => 'Download',
-            'view' => 'Visualizacao',
+            'view' => 'Visualização',
         ];
 
         $coverClasses = [
@@ -73,25 +73,27 @@
         $fileType = $isDigital ? ($fileTypeLabels[$extension] ?? strtoupper($extension ?: 'Digital')) : 'Livro';
         $status = $statusLabels[$resource->status] ?? ucfirst((string) $resource->status);
         $resourceType = $isDigital ? 'Recurso digital' : 'Recurso fisico';
+        $shareUrl = $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id);
         $quantity = (int) $resource->quantity_available;
         $canBorrow = ! $isDigital && $quantity > 0 && $resource->status === 'available';
 
         $details = $isDigital
             ? [
                 'Tipo de ficheiro' => $fileType,
-                'Modo de acesso' => $accessTypeLabels[$digital?->access_type] ?? ucfirst((string) $digital?->access_type ?: 'Nao definido'),
-                'Dias de acesso' => $digital?->access_days ? $digital->access_days . ' dias' : 'Nao definido',
-                'Caminho do ficheiro' => $filePath ?: 'Nao definido',
+                'Modo de acesso' => $accessTypeLabels[$digital?->access_type] ?? ucfirst((string) $digital?->access_type ?: 'Não definido'),
+                'Dias de acesso' => $digital?->access_days ? $digital->access_days . ' dias' : 'Não definido',
+                'Caminho do ficheiro' => $filePath ?: 'Não definido',
             ]
             : [
-                'Localizacao' => $physical?->location ?: 'Nao definido',
-                'Prazo maximo' => $physical?->max_loan_days ? $physical->max_loan_days . ' dias' : 'Nao definido',
-                'Condicao' => $physical?->condition ?: 'Nao definido',
+                'Localização' => $physical?->location ?: 'Não definido',
+                'Prazo máximo' => $physical?->max_loan_days ? $physical->max_loan_days . ' dias' : 'Não definido',
+                'Condição' => $physical?->condition ?: 'Não definido',
                 'Exemplares disponiveis' => $quantity,
             ];
     @endphp
 
     <main class="item bg-white px-3 pb-10 pt-24 dark:bg-black sm:px-5 sm:pb-14 md:px-6 lg:px-8">
+        <x-breadcrumbs :items="[['label' => 'Biblioteca', 'url' => route('library')], ['label' => $isDigital ? 'Recursos digitais' : 'Recursos físicos', 'url' => route('library', ['type' => $resource->type])], ['label' => $resource->title]]" />
         <section
             class="relative mx-auto max-w-7xl overflow-hidden rounded-2xl border border-white/70 bg-white/90 p-4 shadow-[0_28px_70px_rgba(254,104,7,0.12)] backdrop-blur dark:border-[#241915] dark:bg-[#050505]/95 dark:shadow-[0_28px_70px_rgba(0,0,0,0.42)] sm:rounded-[28px] sm:p-5 md:p-8">
             <div class="pointer-events-none absolute -right-12 top-0 h-40 w-40 rounded-full bg-[#FE6807]/10 blur-3xl"></div>
@@ -100,6 +102,10 @@
             <div class="relative grid gap-6 lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.2fr)] lg:gap-8">
                 <div
                     class="relative min-h-[28rem] overflow-hidden rounded-[22px] bg-gradient-to-br {{ $coverClass }} p-5 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.24)] sm:p-6">
+                    @if ($resource->cover_image)
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($resource->cover_image) }}" alt="Capa de {{ $resource->title }}" class="absolute inset-0 h-full w-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/20"></div>
+                    @endif
                     <div class="absolute inset-x-5 top-5 h-px bg-white/30"></div>
                     <div class="absolute -right-10 top-16 h-36 w-36 rounded-full bg-white/10 blur-3xl"></div>
                     <div class="absolute bottom-8 left-6 h-20 w-20 rounded-full border border-white/20"></div>
@@ -113,7 +119,7 @@
                             </span>
                             <span
                                 class="rounded-full border border-white/20 bg-black/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-white/75">
-                                {{ $isDigital ? 'Digital' : 'Fisico' }}
+                                {{ $isDigital ? 'Digital' : 'Físico' }}
                             </span>
                         </div>
 
@@ -129,10 +135,13 @@
                 </div>
 
                 <div class="relative min-w-0">
-                    <a href="{{ route('library') }}"
-                        class="inline-flex min-h-10 items-center justify-center rounded-full border border-[#ffd8bf] bg-[#fff4ec] px-4 text-sm font-semibold text-[#9f5627] transition hover:border-[#ffc7a0] hover:bg-[#ffe8d8] dark:border-[#4a2a1b] dark:bg-[#120d0a] dark:text-[#ffb07a]">
-                        Voltar para recursos
-                    </a>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ route('library') }}" class="inline-flex min-h-10 items-center justify-center rounded-full border border-[#ffd8bf] bg-[#fff4ec] px-4 text-sm font-semibold text-[#9f5627] transition hover:border-[#ffc7a0] hover:bg-[#ffe8d8] dark:border-[#4a2a1b] dark:bg-[#120d0a] dark:text-[#ffb07a]">Voltar para recursos</a>
+                        <button type="button" data-copy-link data-copy-link="{{ $shareUrl }}" class="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-[#decbb8] bg-white px-4 text-sm font-semibold text-[#5f4632] hover:border-[#FE6807] hover:text-[#FE6807] dark:border-[#332820] dark:bg-[#0d0b09] dark:text-[#d8cec3]">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4"/><path d="M12 2v13"/></svg>
+                            <span data-copy-label>Copiar link</span>
+                        </button>
+                    </div>
 
                     <div class="mt-6">
                         <p class="text-xs font-semibold uppercase tracking-[0.35em] text-[#c97d46]">{{ $resourceType }}</p>
@@ -151,11 +160,11 @@
                         </span>
                         <span
                             class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] shadow-[0_6px_18px_rgba(88,44,14,0.06)] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">
-                            {{ $quantity }} {{ $quantity === 1 ? 'disponivel' : 'disponiveis' }}
+                            {{ $quantity }} {{ $quantity === 1 ? 'disponível' : 'disponíveis' }}
                         </span>
                         <span
                             class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] shadow-[0_6px_18px_rgba(88,44,14,0.06)] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">
-                            Dono: {{ $resource->owner?->name ?? 'Nao definido' }}
+                            Dono: {{ $resource->owner?->name ?? 'Não definido' }}
                         </span>
                     </div>
 
@@ -208,45 +217,20 @@
                                 @endif
                             </div>
                         @elseif ($isDownloadMode)
-                            <a href="{{ $fileUrl }}" download
+                            <a href="{{ $fileUrl }}" download data-download-action
                                 class="inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#FE6807] px-6 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(254,104,7,0.22)] transition hover:bg-[#e15f07] sm:w-auto">
                                 Baixar ficheiro
                             </a>
                         @elseif (! $isDigital)
-                            <form method="POST" action="{{ route('reservations.store') }}"
-                                class="rounded-2xl border border-[#f3e4d8] bg-white p-4 shadow-[0_12px_28px_rgba(88,44,14,0.06)] dark:border-[#241915] dark:bg-black">
-                                @csrf
-                                <input type="hidden" name="resource_id" value="{{ $resource->id }}">
-                                <input type="hidden" name="user_id" value="{{ auth()->id() }}">
-                                <input type="hidden" name="type" value="physical">
-
-                                <div class="flex flex-col gap-4 sm:grid sm:grid-cols-2">
-                                    <label class="text-sm font-semibold text-[#2c1c13] dark:text-white">
-                                        Inicio do emprestimo
-                                        <input type="date" name="start_date" value="{{ old('start_date', $loanStartDate) }}"
-                                            min="{{ $loanStartDate }}"
-                                            class="mt-2 min-h-11 w-full rounded-xl border border-[#f3e4d8] bg-[#fffaf6] px-3 text-sm text-[#2c1c13] outline-none focus:border-[#FE6807] dark:border-[#241915] dark:bg-[#050505] dark:text-white">
-                                    </label>
-
-                                    <label class="text-sm font-semibold text-[#2c1c13] dark:text-white">
-                                        Fim do emprestimo
-                                        <input type="date" name="end_date" value="{{ old('end_date', $loanEndDate) }}"
-                                            min="{{ $loanStartDate }}"
-                                            class="mt-2 min-h-11 w-full rounded-xl border border-[#f3e4d8] bg-[#fffaf6] px-3 text-sm text-[#2c1c13] outline-none focus:border-[#FE6807] dark:border-[#241915] dark:bg-[#050505] dark:text-white">
-                                    </label>
-                                </div>
-
-                                @if ($errors->any())
-                                    <div class="mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-200">
-                                        {{ $errors->first() }}
-                                    </div>
-                                @endif
-
-                                <button type="submit" @disabled(! $canBorrow)
-                                    class="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#FE6807] px-6 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(254,104,7,0.22)] transition hover:bg-[#e15f07] disabled:cursor-not-allowed disabled:bg-[#c9b8ad] disabled:shadow-none sm:w-auto">
-                                    {{ $canBorrow ? 'Solicitar emprestimo do livro' : 'Sem disponibilidade para emprestimo' }}
-                                </button>
-                            </form>
+                            <div class="rounded-2xl border border-[#f3e4d8] bg-white p-4 shadow-[0_12px_28px_rgba(88,44,14,0.06)] dark:border-[#241915] dark:bg-black">
+                                <p class="text-sm leading-6 text-[#7a5c4a] dark:text-[#d5c7be]">
+                                    Para recursos físicos, o pedido passa primeiro pelo aceite dos termos e condições. O prazo máximo deste item é de {{ $maxLoanDays }} dias.
+                                </p>
+                                <a href="{{ route('reservations.terms.show', $resource->id) }}"
+                                    class="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-[#FE6807] px-6 text-sm font-semibold text-white shadow-[0_14px_24px_rgba(254,104,7,0.22)] transition hover:bg-[#e15f07] sm:w-auto">
+                                    {{ $canBorrow ? 'Ver termos e solicitar empréstimo' : 'Sem disponibilidade para empréstimo' }}
+                                </a>
+                            </div>
                         @else
                             <div
                                 class="rounded-2xl border border-[#f3e4d8] bg-white px-4 py-5 text-sm font-semibold text-[#7a5c4a] dark:border-[#241915] dark:bg-black dark:text-[#d5c7be]">

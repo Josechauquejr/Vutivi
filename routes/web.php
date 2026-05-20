@@ -5,11 +5,14 @@ use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\PhysicalResourceController;
 use App\Http\Controllers\ResourceController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\ReservationTermsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [ResourceController::class, 'index'])->name('index');
 Route::get('/library', [ResourceController::class, 'library'])->name('library');
+Route::get('/sobre', [ResourceController::class, 'about'])->name('about');
+Route::get('/recurso/{resource:slug}', [ResourceController::class, 'showPublic'])->name('resources.public.show');
 Route::get('/mine', [ResourceController::class, 'mine'])->name('mine');
 Route::get('/favorites', [ResourceController::class, 'favorites'])->name('favorites');
 Route::get('/categories', [ResourceController::class, 'categories'])->name('categories');
@@ -33,6 +36,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/home', [ResourceController::class, 'index'])->name('home');
     Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
     Route::get('/borrowed', [ResourceController::class, 'borrowed'])->name('borrowed');
+    Route::get('/lent', [ResourceController::class, 'lent'])->name('lent');
+    Route::get('/loan-alerts', [ResourceController::class, 'loanAlerts'])->name('loan-alerts');
+    Route::get('/account', [ResourceController::class, 'account'])->name('account');
+    Route::get('/resources/create', [ResourceController::class, 'create'])->name('resources.create');
+    Route::post('/resources/{resource}/favorite', [ResourceController::class, 'toggleFavorite'])->name('resources.favorite');
 
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('{user}/edit', 'edit')->name('edit');
@@ -44,7 +52,13 @@ Route::middleware('auth')->group(function () {
 
     Route::controller(ReservationController::class)->prefix('reservations')->name('reservations.')->group(function () {
         Route::patch('{id}/return', 'return')->name('return');
+        Route::patch('{id}/request-extension', 'requestExtension')->name('extension.request');
+        Route::patch('{id}/approve-extension', 'approveExtension')->name('extension.approve');
+        Route::patch('{id}/deny-extension', 'denyExtension')->name('extension.deny');
     });
+
+    Route::get('/resources/{resource}/terms', [ReservationTermsController::class, 'showTerms'])->name('reservations.terms.show');
+    Route::post('/resources/terms', [ReservationTermsController::class, 'store'])->name('reservations.terms.store');
 
     Route::resources([
         'physical-resources' => PhysicalResourceController::class,

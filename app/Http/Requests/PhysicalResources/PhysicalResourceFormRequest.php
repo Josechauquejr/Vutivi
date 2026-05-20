@@ -24,12 +24,18 @@ abstract class PhysicalResourceFormRequest extends FormRequest
      */
     public function resourceData(): array
     {
-        return $this->only([
+        $data = $this->only([
             'title',
             'description',
             'status',
             'quantity_available',
         ]);
+
+        if ($this->hasFile('cover_image')) {
+            $data['cover_image'] = $this->file('cover_image')->store('resource-covers', 'public');
+        }
+
+        return $data;
     }
 
     /**
@@ -58,6 +64,7 @@ abstract class PhysicalResourceFormRequest extends FormRequest
             'description' => ['nullable', 'string'],
             'status' => ['required', 'in:available,reserved,active'],
             'quantity_available' => ['required', 'integer', 'min:1'],
+            'cover_image' => ['nullable', 'image', 'max:4096'],
             'location' => ['required', 'string', 'max:255'],
             'max_loan_days' => ['required', 'integer', 'min:1'],
             'condition' => ['required', 'string', 'max:100'],

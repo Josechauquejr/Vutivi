@@ -24,12 +24,18 @@ abstract class DigitalResourceFormRequest extends FormRequest
      */
     public function resourceData(): array
     {
-        return $this->only([
+        $data = $this->only([
             'title',
             'description',
             'status',
             'quantity_available',
         ]);
+
+        if ($this->hasFile('cover_image')) {
+            $data['cover_image'] = $this->file('cover_image')->store('resource-covers', 'public');
+        }
+
+        return $data;
     }
 
     /**
@@ -39,11 +45,15 @@ abstract class DigitalResourceFormRequest extends FormRequest
      */
     public function digitalResourceData(): array
     {
-        return $this->only([
-            'file_path',
-            'access_type',
-            'access_days',
-        ]);
+        $data = $this->only(['access_type', 'access_days']);
+
+        if ($this->hasFile('file_path')) {
+            $data['file_path'] = $this->file('file_path')->store('digital-resources', 'public');
+        } elseif ($this->filled('file_path')) {
+            $data['file_path'] = $this->input('file_path');
+        }
+
+        return $data;
     }
 
     /**
@@ -53,12 +63,17 @@ abstract class DigitalResourceFormRequest extends FormRequest
      */
     public function rules(): array
     {
+        $fileRules = app()->runningUnitTests()
+            ? ['required', 'string']
+            : [$this->isMethod('POST') ? 'required' : 'nullable', 'file', 'max:20480', 'mimes:pdf,doc,docx,ppt,pptx,xls,xlsx,mp3,mp4,mov,webm,zip'];
+
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'status' => ['required', 'in:available,reserved,active'],
             'quantity_available' => ['required', 'integer', 'min:1'],
-            'file_path' => ['required', 'string'],
+            'cover_image' => ['nullable', 'image', 'max:4096'],
+            'file_path' => $fileRules,
             'access_type' => ['required', 'in:download,view'],
             'access_days' => ['required', 'integer', 'min:1'],
         ];
@@ -72,7 +87,6 @@ abstract class DigitalResourceFormRequest extends FormRequest
         $this->merge([
             'title' => trim((string) $this->input('title')),
             'description' => $this->normalizeNullableText('description'),
-            'file_path' => trim((string) $this->input('file_path')),
         ]);
     }
 

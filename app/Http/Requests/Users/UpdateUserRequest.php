@@ -28,6 +28,7 @@ class UpdateUserRequest extends UserFormRequest
                 Rule::unique('users', 'email')->ignore($user->id),
             ]),
             'password' => $this->passwordRules(false),
+            'profile_photo' => ['nullable', 'image', 'max:4096'],
         ];
     }
 

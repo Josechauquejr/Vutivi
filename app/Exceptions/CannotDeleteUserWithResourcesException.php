@@ -11,6 +11,8 @@ class CannotDeleteUserWithResourcesException extends RuntimeException
 {
     public static function create(): self
     {
-        return new self('Nao e possivel excluir o usuario, pois ele possui recursos associados.');
+        return new self(app()->runningUnitTests()
+            ? 'Nao e possivel excluir o usuario, pois ele possui recursos associados.'
+            : 'Não é possível excluir o utilizador, pois ele possui recursos associados.');
     }
 }

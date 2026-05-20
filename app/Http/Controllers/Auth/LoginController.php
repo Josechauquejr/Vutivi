@@ -50,7 +50,7 @@ class LoginController extends Controller
 
             return back()
                 ->withInput($request->only('username'))
-                ->with('error', 'Nao foi possivel iniciar a sessao.');
+                ->with('error', 'Não foi possível iniciar a sessão.');
         }
 
         // Regeneramos a sessao apenas apos o login bem-sucedido para reduzir risco de fixacao de sessao.

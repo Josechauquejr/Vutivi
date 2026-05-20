@@ -32,6 +32,12 @@ abstract class UserFormRequest extends FormRequest
             unset($validatedData['password']);
         }
 
+        if ($this->hasFile('profile_photo')) {
+            $validatedData['profile_photo'] = $this->file('profile_photo')->store('profile-photos', 'public');
+        } else {
+            unset($validatedData['profile_photo']);
+        }
+
         return $validatedData;
     }
 
@@ -125,6 +131,7 @@ abstract class UserFormRequest extends FormRequest
             'password.mixed' => 'A password deve conter letras maiusculas e minusculas.',
             'password.numbers' => 'A password deve conter pelo menos um numero.',
             'password.symbols' => 'A password deve conter pelo menos um simbolo.',
+            'profile_photo.image' => 'A foto de perfil deve ser uma imagem.',
         ];
     }
 
@@ -140,6 +147,7 @@ abstract class UserFormRequest extends FormRequest
             'username' => 'username',
             'email' => 'email',
             'password' => 'password',
+            'profile_photo' => 'foto de perfil',
         ];
     }
 
