@@ -168,6 +168,61 @@ class ReservationCrudTest extends TestCase
         $this->assertTrue($reservation->fresh()->resource->is($secondResource));
     }
 
+    public function test_extension_decision_notifies_borrower_and_return_restores_borrow_eligibility(): void
+    {
+        [$owner, $borrower, $resource] = $this->createPhysicalResourceFixture();
+
+        $reservation = Reservation::create([
+            'resource_id' => $resource->id,
+            'user_id' => $borrower->id,
+            'type' => 'physical',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(4)->toDateString(),
+            'status' => Reservation::STATUS_IN_USE,
+            'approved_by' => $owner->id,
+            'approved_at' => now(),
+            'picked_up_at' => now(),
+        ]);
+
+        $resource->update(['quantity_available' => 0, 'status' => 'reserved']);
+
+        $this->actingAs($borrower)
+            ->patch(route('reservations.extension.request', $reservation->id), [
+                'extension_reason' => 'Preciso de concluir a leitura.',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(Reservation::STATUS_EXTENSION_PENDING, $reservation->fresh()->status);
+
+        $this->actingAs($owner)
+            ->patch(route('reservations.extension.approve', $reservation->id))
+            ->assertRedirect();
+
+        $reservation->refresh();
+
+        $this->assertSame(Reservation::STATUS_EXTENDED, $reservation->status);
+        $this->assertSame(Reservation::EXTENSION_APPROVED, $reservation->extension_decision);
+        $this->assertNotNull($reservation->extension_decided_at);
+
+        $this->actingAs($borrower)
+            ->patch(route('reservations.return', $reservation->id))
+            ->assertRedirect(route('reservations.show', $reservation->id));
+
+        $this->assertSame(Reservation::STATUS_RETURNED, $reservation->fresh()->status);
+        $this->assertSame(1, (int) $resource->fresh()->quantity_available);
+        $this->assertSame('available', $resource->fresh()->status);
+
+        $this->post(route('reservations.store'), [
+            'resource_id' => $resource->id,
+            'user_id' => $borrower->id,
+            'type' => 'physical',
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(3)->toDateString(),
+        ])->assertRedirect();
+
+        $this->assertSame(2, Reservation::where('resource_id', $resource->id)->where('user_id', $borrower->id)->count());
+    }
+
     private function createPhysicalResourceFixture(): array
     {
         // Esta funcao auxiliar mantem as assercoes focadas no comportamento de negocio, e nao no ruido de preparacao.

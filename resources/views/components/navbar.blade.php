@@ -29,9 +29,46 @@
     $notifications = collect();
 
     if ($user) {
+        $extensionRequests = Reservation::with(['resource', 'user'])
+            ->whereHas('resource', fn ($query) => $query->where('owner_id', $user->id))
+            ->whereNull('returned_at')
+            ->where('status', Reservation::STATUS_EXTENSION_PENDING)
+            ->latest('extension_requested_at')
+            ->limit(2)
+            ->get();
+
+        foreach ($extensionRequests as $reservation) {
+            $notifications->push([
+                'title' => 'Pedido de extensao pendente',
+                'body' => (optional($reservation->user)->name ?? 'Utilizador') . ' pediu mais tempo para ' . (optional($reservation->resource)->title ?? 'um recurso'),
+                'route' => route('reservations.show', $reservation->id),
+                'icon' => 'clock',
+            ]);
+        }
+
+        $extensionDecisions = Reservation::with('resource')
+            ->where('user_id', $user->id)
+            ->whereNotNull('extension_decision')
+            ->whereNotNull('extension_decided_at')
+            ->latest('extension_decided_at')
+            ->limit(2)
+            ->get();
+
+        foreach ($extensionDecisions as $reservation) {
+            $approved = $reservation->extension_decision === Reservation::EXTENSION_APPROVED;
+
+            $notifications->push([
+                'title' => $approved ? 'Extensao aprovada' : 'Extensao recusada',
+                'body' => optional($reservation->resource)->title . ($approved ? ' recebeu um novo prazo.' : ' mantem o prazo original.'),
+                'route' => route('reservations.show', $reservation->id),
+                'icon' => $approved ? 'check-circle' : 'x-circle',
+            ]);
+        }
+
         $dueSoon = Reservation::with('resource')
             ->where('user_id', $user->id)
             ->whereNull('returned_at')
+            ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
             ->whereDate('end_date', '<=', now()->addDays(3)->toDateString())
             ->orderBy('end_date')
             ->limit(2)

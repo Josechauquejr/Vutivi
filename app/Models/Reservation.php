@@ -24,6 +24,10 @@ class Reservation extends Model
         'picked_up_at',
         'actual_return_date',
         'extension_reason',
+        'extension_requested_at',
+        'extension_decision',
+        'extension_decided_at',
+        'extension_decision_note',
     ];
 
     // Estados da requisição
@@ -35,6 +39,9 @@ class Reservation extends Model
     const STATUS_RETURNED = 'returned';
     const STATUS_CANCELLED = 'cancelled';
     const STATUS_DENIED = 'denied';
+
+    public const EXTENSION_APPROVED = 'approved';
+    public const EXTENSION_DENIED = 'denied';
 
     public const COPY_HOLDING_STATUSES = [
         self::STATUS_APPROVED,
@@ -57,6 +64,8 @@ class Reservation extends Model
             'approved_at' => 'datetime',
             'actual_return_date' => 'date',
             'returned_at' => 'datetime',
+            'extension_requested_at' => 'datetime',
+            'extension_decided_at' => 'datetime',
         ];
     }
 

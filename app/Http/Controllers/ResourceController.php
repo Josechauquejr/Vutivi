@@ -192,10 +192,13 @@ class ResourceController extends Controller
             ->with(['reservations' => function ($query) {
                 $query->where('user_id', auth()->id())
                     ->whereNull('returned_at')
+                    ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
                     ->latest();
             }])
             ->whereHas('reservations', function ($query) {
-                $query->where('user_id', auth()->id())->whereNull('returned_at');
+                $query->where('user_id', auth()->id())
+                    ->whereNull('returned_at')
+                    ->whereIn('status', Reservation::COPY_HOLDING_STATUSES);
             })
             , $request)
             ->paginate($this->perPage($request))
@@ -217,7 +220,10 @@ class ResourceController extends Controller
     {
         $resources = $this->applySort($this->resourceQuery($request)
             ->where('owner_id', auth()->id())
-            ->whereHas('reservations', fn ($query) => $query->whereNull('returned_at'))
+            ->whereHas('reservations', fn ($query) => $query->whereNull('returned_at')->whereIn('status', [
+                Reservation::STATUS_PENDING,
+                ...Reservation::COPY_HOLDING_STATUSES,
+            ]))
             , $request)
             ->paginate($this->perPage($request))
             ->withQueryString();
@@ -238,13 +244,22 @@ class ResourceController extends Controller
     public function loanAlerts()
     {
         $reservations = Reservation::with(['resource.owner', 'user'])
-            ->where(function ($query) {
-                $query->where('user_id', auth()->id())
-                    ->orWhereHas('resource', fn ($query) => $query->where('owner_id', auth()->id()));
-            })
             ->whereNull('returned_at')
-            ->whereDate('end_date', '<=', now()->addDays(3)->toDateString())
-            ->orderBy('end_date')
+            ->where(function ($query) {
+                $query->where(function ($query) {
+                    $query->where('user_id', auth()->id())
+                        ->whereDate('end_date', '<=', now()->addDays(3)->toDateString())
+                        ->whereIn('status', Reservation::COPY_HOLDING_STATUSES);
+                })->orWhere(function ($query) {
+                    $query->whereHas('resource', fn ($query) => $query->where('owner_id', auth()->id()))
+                        ->where('status', Reservation::STATUS_EXTENSION_PENDING);
+                })->orWhere(function ($query) {
+                    $query->where('user_id', auth()->id())
+                        ->whereNotNull('extension_decision')
+                        ->whereNotNull('extension_decided_at');
+                });
+            })
+            ->latest('updated_at')
             ->paginate(10);
 
         return view('loan_alerts', compact('reservations'));
@@ -258,8 +273,14 @@ class ResourceController extends Controller
         $user = auth()->user();
         $stats = [
             'resources' => Resource::where('owner_id', $user->id)->count(),
-            'borrowed' => Reservation::where('user_id', $user->id)->whereNull('returned_at')->count(),
-            'lent' => Reservation::whereHas('resource', fn ($query) => $query->where('owner_id', $user->id))->whereNull('returned_at')->count(),
+            'borrowed' => Reservation::where('user_id', $user->id)->whereNull('returned_at')->whereIn('status', Reservation::COPY_HOLDING_STATUSES)->count(),
+            'lent' => Reservation::whereHas('resource', fn ($query) => $query->where('owner_id', $user->id))
+                ->whereNull('returned_at')
+                ->whereIn('status', [
+                    Reservation::STATUS_PENDING,
+                    ...Reservation::COPY_HOLDING_STATUSES,
+                ])
+                ->count(),
         ];
 
         return view('account', compact('user', 'stats'));
@@ -355,7 +376,7 @@ class ResourceController extends Controller
                 'total' => Resource::count(),
                 'digital' => Resource::where('type', 'digital')->count(),
                 'physical' => Resource::where('type', 'physical')->count(),
-                'activeLoans' => Reservation::whereNull('returned_at')->count(),
+                'activeLoans' => Reservation::whereNull('returned_at')->whereIn('status', Reservation::COPY_HOLDING_STATUSES)->count(),
             ],
             'activeTab' => $data['activeTab'] ?? null,
             'showOwnerActions' => $data['showOwnerActions'] ?? false,

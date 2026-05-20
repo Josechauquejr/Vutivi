@@ -260,6 +260,7 @@ class ReservationController extends Controller
         abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
 
         $reservation->update(['status' => Reservation::STATUS_DENIED]);
+        $this->syncResourceAvailability->handle($reservation->resource->fresh());
 
         return back()->with('error', 'Pedido recusado.');
     }
@@ -267,10 +268,27 @@ class ReservationController extends Controller
     public function requestExtension(Request $request, int $id)
     {
         $reservation = $this->reservation($id);
+        $reservation->load('resource.physicalResource');
         abort_unless((int) $reservation->user_id === (int) auth()->id(), 403);
+
+        if ($reservation->status === Reservation::STATUS_EXTENSION_PENDING) {
+            throw ValidationException::withMessages([
+                'extension_reason' => 'Ja existe um pedido de extensao pendente para este emprestimo.',
+            ]);
+        }
+
+        if (! $reservation->canExtend()) {
+            throw ValidationException::withMessages([
+                'extension_reason' => 'Este emprestimo nao pode ser estendido neste momento.',
+            ]);
+        }
 
         $reservation->update([
             'status' => Reservation::STATUS_EXTENSION_PENDING,
+            'extension_requested_at' => now(),
+            'extension_decision' => null,
+            'extension_decided_at' => null,
+            'extension_decision_note' => null,
             'extension_reason' => $request->input('extension_reason', 'Pedido de extensão solicitado pelo utilizador.'),
         ]);
 
@@ -286,26 +304,36 @@ class ReservationController extends Controller
         return back()->with('success', 'Pedido de extensão enviado ao dono do recurso.');
     }
 
-    public function approveExtension(int $id)
+    public function approveExtension(Request $request, int $id)
     {
         $reservation = $this->reservationDetails($id);
         abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless($reservation->status === Reservation::STATUS_EXTENSION_PENDING, 422);
 
         $reservation->update([
             'status' => Reservation::STATUS_EXTENDED,
             'extension_count' => ((int) $reservation->extension_count) + 1,
             'end_date' => $reservation->end_date->copy()->addDays(7)->toDateString(),
+            'extension_decision' => Reservation::EXTENSION_APPROVED,
+            'extension_decided_at' => now(),
+            'extension_decision_note' => $request->input('extension_decision_note'),
         ]);
 
         return back()->with('success', 'Extensão aprovada. O novo prazo foi aplicado.');
     }
 
-    public function denyExtension(int $id)
+    public function denyExtension(Request $request, int $id)
     {
         $reservation = $this->reservationDetails($id);
         abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless($reservation->status === Reservation::STATUS_EXTENSION_PENDING, 422);
 
-        $reservation->update(['status' => Reservation::STATUS_IN_USE]);
+        $reservation->update([
+            'status' => Reservation::STATUS_IN_USE,
+            'extension_decision' => Reservation::EXTENSION_DENIED,
+            'extension_decided_at' => now(),
+            'extension_decision_note' => $request->input('extension_decision_note'),
+        ]);
 
         return back()->with('error', 'Extensão negada. O prazo original permanece ativo.');
     }

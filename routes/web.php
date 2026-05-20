@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [ResourceController::class, 'index'])->name('index');
 Route::get('/library', [ResourceController::class, 'library'])->name('library');
 Route::get('/sobre', [ResourceController::class, 'about'])->name('about');
+Route::get('/apresentacao', function () {
+    return view('vutivi-apresentacao');
+})->name('apresentacao');
 Route::get('/recurso/{resource:slug}', [ResourceController::class, 'showPublic'])->name('resources.public.show');
 Route::get('/mine', [ResourceController::class, 'mine'])->name('mine');
 Route::get('/favorites', [ResourceController::class, 'favorites'])->name('favorites');

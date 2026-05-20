@@ -1,0 +1,2064 @@
+<!doctype html>
+<html lang="pt-MZ">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>VUTIVI | Apresentação do Projecto</title>
+        <style>
+            :root {
+                --orange: #fe6807;
+                --ink: #241b14;
+                --ink-2: #2c1c13;
+                --muted: #66594d;
+                --paper: #fbfaf7;
+                --cream: #fffaf5;
+                --soft: #fff4ec;
+                --line: #eadfce;
+                --line-2: #decbb8;
+                --dark: #050505;
+                --dark-2: #17120f;
+                --green: #2f7d52;
+                --blue: #2f5f8f;
+                --red: #a73522;
+                --shadow: 0 24px 70px rgba(54, 39, 25, 0.16);
+                --radius: 24px;
+                --ease: cubic-bezier(0.22, 1, 0.36, 1);
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                margin: 0;
+                min-height: 100vh;
+                overflow: hidden;
+                background:
+                    radial-gradient(
+                        circle at 14% 10%,
+                        rgba(254, 104, 7, 0.16),
+                        transparent 30%
+                    ),
+                    linear-gradient(
+                        135deg,
+                        #ffffff 0%,
+                        var(--paper) 46%,
+                        #fff2e8 100%
+                    );
+                color: var(--ink);
+                font-family:
+                    Inter,
+                    ui-sans-serif,
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Segoe UI",
+                    sans-serif;
+            }
+
+            body.dark {
+                background:
+                    radial-gradient(
+                        circle at 20% 12%,
+                        rgba(254, 104, 7, 0.18),
+                        transparent 26%
+                    ),
+                    linear-gradient(
+                        135deg,
+                        #050505 0%,
+                        #0b0908 54%,
+                        #17120f 100%
+                    );
+                color: #fff;
+            }
+
+            button {
+                font: inherit;
+            }
+
+            .deck {
+                position: relative;
+                width: 100vw;
+                height: 100vh;
+                overflow: hidden;
+            }
+
+            .slide {
+                position: absolute;
+                inset: 0;
+                display: grid;
+                place-items: center;
+                padding: 6.4rem 5vw 5.2rem;
+                opacity: 0;
+                pointer-events: none;
+                transform: translateX(7vw) scale(0.96);
+                filter: blur(12px);
+                transition:
+                    opacity 0.65s var(--ease),
+                    transform 0.75s var(--ease),
+                    filter 0.75s var(--ease);
+            }
+
+            .slide.is-active {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translateX(0) scale(1);
+                filter: blur(0);
+                z-index: 2;
+            }
+
+            .slide.is-leaving-left {
+                transform: translateX(-8vw) scale(0.96);
+            }
+            .slide.is-leaving-right {
+                transform: translateX(8vw) scale(0.96);
+            }
+
+            .frame {
+                width: min(1180px, 100%);
+                min-height: min(700px, calc(100vh - 12rem));
+                display: grid;
+                gap: 1.4rem;
+                align-content: center;
+            }
+
+            .split {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
+                gap: clamp(1rem, 4vw, 3rem);
+                align-items: center;
+            }
+
+            .eyebrow {
+                margin: 0 0 0.9rem;
+                color: var(--orange);
+                font-size: 0.75rem;
+                font-weight: 900;
+                letter-spacing: 0.22em;
+                text-transform: uppercase;
+            }
+
+            h1,
+            h2 {
+                margin: 0;
+                color: var(--ink);
+                font-family: Georgia, "Times New Roman", serif;
+                line-height: 0.98;
+                letter-spacing: 0;
+            }
+
+            body.dark h1,
+            body.dark h2 {
+                color: #fff;
+            }
+
+            h1 {
+                font-size: clamp(3rem, 8vw, 7.4rem);
+            }
+            h2 {
+                font-size: clamp(2.2rem, 5.2vw, 4.7rem);
+            }
+
+            .subtitle {
+                margin: 1.1rem 0 0;
+                max-width: 760px;
+                color: var(--muted);
+                font-size: clamp(1rem, 1.7vw, 1.35rem);
+                line-height: 1.7;
+                font-weight: 600;
+            }
+
+            body.dark .subtitle,
+            body.dark p,
+            body.dark .card p {
+                color: #d8cec3;
+            }
+
+            .text {
+                color: var(--muted);
+                font-size: 1rem;
+                line-height: 1.75;
+            }
+
+            .hero-logo {
+                width: min(320px, 72vw);
+                display: block;
+                margin-bottom: 1.3rem;
+                view-transition-name: vutivi-logo;
+            }
+
+            .glass {
+                border: 1px solid rgba(234, 223, 206, 0.9);
+                border-radius: var(--radius);
+                background: rgba(255, 255, 255, 0.76);
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(18px);
+            }
+
+            body.dark .glass {
+                border-color: #2b211b;
+                background: rgba(9, 9, 9, 0.78);
+            }
+
+            .visual {
+                position: relative;
+                min-height: 480px;
+                overflow: hidden;
+                padding: 1.3rem;
+            }
+
+            .visual img {
+                width: 100%;
+                height: 100%;
+                min-height: 430px;
+                object-fit: cover;
+                border-radius: 18px;
+                filter: saturate(1.06) contrast(1.02);
+            }
+
+            .floating-card {
+                position: absolute;
+                left: 1.8rem;
+                right: 1.8rem;
+                bottom: 1.8rem;
+                padding: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.86);
+                box-shadow: 0 18px 48px rgba(54, 39, 25, 0.18);
+            }
+
+            .grid-2,
+            .grid-3,
+            .grid-4 {
+                display: grid;
+                gap: 1rem;
+            }
+
+            .grid-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .grid-3 {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .grid-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+
+            .card {
+                min-height: 150px;
+                padding: 1.1rem;
+                border: 1px solid var(--line);
+                border-radius: 18px;
+                background: rgba(255, 255, 255, 0.84);
+                box-shadow: 0 16px 38px rgba(54, 39, 25, 0.08);
+                transition:
+                    transform 0.45s var(--ease),
+                    box-shadow 0.45s var(--ease);
+            }
+
+            .slide.is-active .card {
+                animation: rise 0.75s var(--ease) both;
+                animation-delay: calc(var(--i, 0) * 70ms);
+            }
+
+            .card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 24px 52px rgba(54, 39, 25, 0.14);
+            }
+
+            body.dark .card {
+                border-color: #332820;
+                background: rgba(13, 11, 9, 0.88);
+            }
+
+            .card h3 {
+                margin: 0.8rem 0 0.35rem;
+                color: var(--ink-2);
+                font-size: 1.05rem;
+            }
+
+            body.dark .card h3 {
+                color: #fff;
+            }
+
+            .card p {
+                margin: 0;
+                color: var(--muted);
+                line-height: 1.6;
+                font-size: 0.94rem;
+            }
+
+            .icon {
+                width: 42px;
+                height: 42px;
+                display: inline-grid;
+                place-items: center;
+                border-radius: 14px;
+                background: var(--soft);
+                color: var(--orange);
+            }
+
+            .icon svg {
+                width: 22px;
+                height: 22px;
+                fill: none;
+                stroke: currentColor;
+                stroke-width: 2;
+                stroke-linecap: round;
+                stroke-linejoin: round;
+            }
+
+            .flow {
+                display: grid;
+                grid-template-columns: repeat(5, minmax(0, 1fr));
+                gap: 0.8rem;
+                align-items: stretch;
+            }
+
+            .flow-step {
+                position: relative;
+                padding: 1rem;
+                border: 1px solid var(--line);
+                border-radius: 18px;
+                background: #fff;
+            }
+
+            .flow-step:not(:last-child)::after {
+                content: "";
+                position: absolute;
+                right: -0.7rem;
+                top: 50%;
+                width: 0.6rem;
+                height: 0.6rem;
+                border-right: 2px solid var(--orange);
+                border-top: 2px solid var(--orange);
+                transform: translateY(-50%) rotate(45deg);
+            }
+
+            .flow-step strong {
+                display: block;
+                margin-bottom: 0.35rem;
+                color: var(--ink);
+            }
+            .flow-step span {
+                color: var(--muted);
+                font-size: 0.9rem;
+                line-height: 1.45;
+            }
+
+            .diagram {
+                width: 100%;
+                padding: 1.2rem;
+                overflow: hidden;
+            }
+
+            .diagram svg {
+                width: 100%;
+                height: auto;
+                display: block;
+            }
+
+            .diagram text {
+                font:
+                    700 13px Inter,
+                    system-ui,
+                    sans-serif;
+                fill: var(--ink);
+            }
+
+            .diagram .small {
+                font-size: 11px;
+                font-weight: 600;
+                fill: var(--muted);
+            }
+            .diagram .box {
+                fill: #fffaf5;
+                stroke: #decbb8;
+                stroke-width: 1.6;
+            }
+            .diagram .accent {
+                fill: #fff1e6;
+                stroke: #fe6807;
+            }
+            .diagram .line {
+                stroke: #9f6a47;
+                stroke-width: 1.8;
+                fill: none;
+                marker-end: url(#arrow);
+            }
+
+            body.dark .diagram .box {
+                fill: #120d0a;
+                stroke: #332820;
+            }
+            body.dark .diagram text {
+                fill: #fff;
+            }
+            body.dark .diagram .small {
+                fill: #cfc5ba;
+            }
+
+            .metric-row {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+                gap: 1rem;
+            }
+
+            .metric {
+                padding: 1rem;
+                border-radius: 18px;
+                background: var(--ink);
+                color: white;
+            }
+
+            .metric strong {
+                display: block;
+                color: var(--orange);
+                font-size: 2rem;
+            }
+            .metric span {
+                font-size: 0.9rem;
+                color: #f1dfcd;
+            }
+
+            .topbar {
+                position: fixed;
+                left: 4vw;
+                right: 4vw;
+                top: 1.2rem;
+                z-index: 20;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                pointer-events: none;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 0.8rem;
+                pointer-events: auto;
+            }
+
+            .brand img {
+                width: 112px;
+                height: auto;
+            }
+            .brand span {
+                color: var(--muted);
+                font-size: 0.78rem;
+                font-weight: 800;
+                letter-spacing: 0.16em;
+                text-transform: uppercase;
+            }
+
+            .controls,
+            .dots {
+                pointer-events: auto;
+            }
+
+            .controls {
+                display: flex;
+                align-items: center;
+                gap: 0.6rem;
+                padding: 0.45rem;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.82);
+                box-shadow: 0 12px 34px rgba(54, 39, 25, 0.1);
+                backdrop-filter: blur(14px);
+            }
+
+            .controls button,
+            .theme-toggle {
+                width: 42px;
+                height: 42px;
+                border: 0;
+                border-radius: 50%;
+                background: var(--soft);
+                color: var(--ink);
+                cursor: pointer;
+                transition:
+                    transform 0.25s var(--ease),
+                    background 0.25s var(--ease),
+                    color 0.25s var(--ease);
+            }
+
+            .controls button:hover,
+            .theme-toggle:hover {
+                transform: translateY(-2px);
+                background: var(--orange);
+                color: white;
+            }
+
+            .counter {
+                min-width: 72px;
+                text-align: center;
+                color: var(--muted);
+                font-size: 0.9rem;
+                font-weight: 900;
+            }
+
+            .progress {
+                position: fixed;
+                left: 0;
+                right: 0;
+                top: 0;
+                height: 5px;
+                z-index: 30;
+                background: rgba(222, 203, 184, 0.55);
+            }
+
+            .progress span {
+                display: block;
+                width: 0;
+                height: 100%;
+                background: var(--orange);
+                transition: width 0.45s var(--ease);
+            }
+
+            .dots {
+                position: fixed;
+                left: 50%;
+                bottom: 1.25rem;
+                z-index: 20;
+                display: flex;
+                gap: 0.36rem;
+                transform: translateX(-50%);
+                padding: 0.6rem 0.75rem;
+                border: 1px solid var(--line);
+                border-radius: 999px;
+                background: rgba(255, 255, 255, 0.82);
+                backdrop-filter: blur(14px);
+            }
+
+            .dot {
+                width: 0.55rem;
+                height: 0.55rem;
+                border: 0;
+                border-radius: 999px;
+                background: #cbb7a3;
+                cursor: pointer;
+                transition:
+                    width 0.3s var(--ease),
+                    background 0.3s var(--ease);
+            }
+
+            .dot.is-active {
+                width: 1.8rem;
+                background: var(--orange);
+            }
+
+            .kbd {
+                position: fixed;
+                right: 4vw;
+                bottom: 1.15rem;
+                color: var(--muted);
+                font-size: 0.8rem;
+                font-weight: 800;
+            }
+
+            ::view-transition-old(root),
+            ::view-transition-new(root) {
+                animation-duration: 0.58s;
+                animation-timing-function: var(--ease);
+            }
+
+            @keyframes rise {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px) scale(0.98);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                *,
+                *::before,
+                *::after {
+                    animation: none !important;
+                    transition: none !important;
+                }
+            }
+
+            @media (max-width: 900px) {
+                body {
+                    overflow: auto;
+                }
+                .deck {
+                    height: auto;
+                    min-height: 100vh;
+                }
+                .slide {
+                    position: relative;
+                    min-height: 100vh;
+                    display: none;
+                    padding: 5.5rem 1rem 5.8rem;
+                }
+                .slide.is-active {
+                    display: grid;
+                }
+                .split,
+                .grid-2,
+                .grid-3,
+                .grid-4,
+                .metric-row,
+                .flow {
+                    grid-template-columns: 1fr;
+                }
+                .flow-step::after {
+                    display: none;
+                }
+                .visual {
+                    min-height: 320px;
+                }
+                .visual img {
+                    min-height: 280px;
+                }
+                .brand span,
+                .kbd {
+                    display: none;
+                }
+                .topbar {
+                    left: 1rem;
+                    right: 1rem;
+                }
+                .dots {
+                    max-width: calc(100vw - 2rem);
+                    overflow-x: auto;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="progress" aria-hidden="true">
+            <span id="progress"></span>
+        </div>
+
+        <header class="topbar">
+            <div class="brand">
+                <img src="" alt="Logotipo VUTIVI" />
+                <span>Apresentação do projecto</span>
+            </div>
+            <div class="controls" aria-label="Controlos da apresentação">
+                <button id="prev" type="button" aria-label="Slide anterior">
+                    ‹
+                </button>
+                <span class="counter"
+                    ><span id="current">01</span>/<span id="total"
+                        >18</span
+                    ></span
+                >
+                <button id="next" type="button" aria-label="Slide seguinte">
+                    ›
+                </button>
+                <button
+                    id="theme"
+                    class="theme-toggle"
+                    type="button"
+                    aria-label="Alternar tema"
+                >
+                    ◐
+                </button>
+            </div>
+        </header>
+
+        <main class="deck" id="deck">
+            <section class="slide is-active">
+                <div class="frame split">
+                    <div>
+                        <img
+                            class="hero-logo"
+                            src="../public/img/png/logo_bb.png"
+                            alt="VUTIVI"
+                        />
+                        <p class="eyebrow">Biblioteca física e digital</p>
+                        <h1>VUTIVI</h1>
+                        <p class="subtitle">
+                            Plataforma de gestão de recursos, empréstimos,
+                            acessos digitais e circulação organizada do
+                            conhecimento.
+                        </p>
+                    </div>
+                    <div class="visual glass">
+                        <img
+                            src="../public/img/png/book_background.png"
+                            alt="Livros e ambiente de biblioteca"
+                        />
+                        <div class="floating-card">
+                            <strong>Conhecimento acessível</strong>
+                            <p class="text">
+                                Um sistema académico para pesquisar, publicar,
+                                emprestar, devolver e acompanhar recursos com
+                                clareza.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">01. Introdução</p>
+                    <h2>
+                        Organizar conhecimento exige mais do que guardar
+                        ficheiros.
+                    </h2>
+                    <p class="subtitle">
+                        Bibliotecas pequenas, centros de formação e equipas
+                        académicas lidam com dispersão de recursos, controlo
+                        manual de empréstimos e baixa visibilidade sobre prazos.
+                        A VUTIVI responde a esse cenário com uma experiência
+                        digital integrada.
+                    </p>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                    <path
+                                        d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"
+                                    /></svg
+                            ></span>
+                            <h3>Recursos dispersos</h3>
+                            <p>
+                                Livros, documentos e materiais digitais passam a
+                                viver num catálogo pesquisável e partilhado.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M12 8v5l3 2" />
+                                    <circle cx="12" cy="12" r="10" /></svg
+                            ></span>
+                            <h3>Prazos visíveis</h3>
+                            <p>
+                                O utilizador acompanha devoluções, atrasos e
+                                pedidos de extensão sem depender de controlo
+                                informal.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <span class="icon"
+                                ><svg><path d="M20 6 9 17l-5-5" /></svg
+                            ></span>
+                            <h3>Rastreabilidade</h3>
+                            <p>
+                                Cada empréstimo mantém histórico, estado, dono,
+                                utilizador e sincronização de disponibilidade.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame split">
+                    <div>
+                        <p class="eyebrow">02. Objectivo geral</p>
+                        <h2>Centralizar a gestão da biblioteca híbrida.</h2>
+                        <p class="subtitle">
+                            O objectivo central da VUTIVI é disponibilizar uma
+                            plataforma web que permita organizar recursos
+                            físicos e digitais, controlar empréstimos, apoiar a
+                            descoberta de materiais e melhorar a experiência de
+                            utilizadores e donos de recursos.
+                        </p>
+                    </div>
+                    <div class="metric-row">
+                        <div class="metric">
+                            <strong>1</strong><span>Catálogo unificado</span>
+                        </div>
+                        <div class="metric">
+                            <strong>2</strong><span>Fluxo de empréstimos</span>
+                        </div>
+                        <div class="metric">
+                            <strong>3</strong><span>Notificações úteis</span>
+                        </div>
+                        <div class="metric">
+                            <strong>4</strong
+                            ><span>Experiência responsiva</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">03. Objectivos específicos</p>
+                    <h2>
+                        Funcionalidades orientadas ao ciclo completo do recurso.
+                    </h2>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M16 21v-2a4 4 0 0 0-8 0v2" />
+                                    <circle cx="12" cy="7" r="4" /></svg
+                            ></span>
+                            <h3>Utilizadores</h3>
+                            <p>
+                                Cadastrar, autenticar, gerir perfil e associar
+                                cada acção a uma identidade clara.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M21 8v13H3V8" />
+                                    <path d="M1 3h22v5H1z" />
+                                    <path d="M10 12h4" /></svg
+                            ></span>
+                            <h3>Recursos</h3>
+                            <p>
+                                Registar recursos físicos e digitais com capa,
+                                descrição, disponibilidade e dono.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M3 12h18" />
+                                    <path d="m15 6 6 6-6 6" /></svg
+                            ></span>
+                            <h3>Empréstimos</h3>
+                            <p>
+                                Controlar pedidos, aprovação, devolução,
+                                extensão e histórico do ciclo de uso.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 3">
+                            <span class="icon"
+                                ><svg>
+                                    <path
+                                        d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 7h18s-3 0-3-7"
+                                    />
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg
+                            ></span>
+                            <h3>Notificações</h3>
+                            <p>
+                                Alertar donos e utilizadores sobre prazos,
+                                aprovações e decisões de extensão.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 4">
+                            <span class="icon"
+                                ><svg>
+                                    <path
+                                        d="m12 21-1.45-1.32C5.4 15 2 12 2 8.2 2 5.2 4.4 3 7.5 3c1.7 0 3.4.8 4.5 2 1.1-1.2 2.8-2 4.5-2C19.6 3 22 5.2 22 8.2c0 3.8-3.4 6.8-8.55 11.48Z"
+                                    /></svg
+                            ></span>
+                            <h3>Favoritos</h3>
+                            <p>
+                                Permitir que o utilizador guarde materiais
+                                relevantes e regresse a eles rapidamente.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 5">
+                            <span class="icon"
+                                ><svg>
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.3-4.3" /></svg
+                            ></span>
+                            <h3>Pesquisa</h3>
+                            <p>
+                                Filtrar por título, tipo, formato, estado e
+                                popularidade para melhorar descoberta.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">04. Visão geral da solução</p>
+                    <h2>Um fluxo simples para uma operação completa.</h2>
+                    <p class="subtitle">
+                        A plataforma liga catálogo, termos, empréstimos,
+                        notificações e disponibilidade num único percurso
+                        operacional.
+                    </p>
+                    <div class="flow">
+                        <div class="flow-step">
+                            <strong>Pesquisar</strong
+                            ><span
+                                >O utilizador encontra recursos por filtros e
+                                palavras-chave.</span
+                            >
+                        </div>
+                        <div class="flow-step">
+                            <strong>Abrir recurso</strong
+                            ><span
+                                >Consulta descrição, dono, formato e cópias
+                                disponíveis.</span
+                            >
+                        </div>
+                        <div class="flow-step">
+                            <strong>Solicitar</strong
+                            ><span
+                                >Aceita termos e cria o pedido de
+                                empréstimo.</span
+                            >
+                        </div>
+                        <div class="flow-step">
+                            <strong>Acompanhar</strong
+                            ><span>Vê estado, prazo, alertas e extensão.</span>
+                        </div>
+                        <div class="flow-step">
+                            <strong>Devolver</strong
+                            ><span>O recurso volta a ficar disponível.</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">05. Perfis de utilizador</p>
+                    <h2>Actores com responsabilidades distintas.</h2>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <span class="icon"
+                                ><svg>
+                                    <circle cx="12" cy="7" r="4" />
+                                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0" /></svg
+                            ></span>
+                            <h3>Cliente ou leitor</h3>
+                            <p>
+                                Pesquisa recursos, consulta detalhes, pede
+                                empréstimos, devolve e solicita extensão quando
+                                necessário.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M4 4h16v16H4z" />
+                                    <path d="M8 8h8" />
+                                    <path d="M8 12h8" />
+                                    <path d="M8 16h5" /></svg
+                            ></span>
+                            <h3>Dono do recurso</h3>
+                            <p>
+                                Publica materiais, acompanha pedidos, aprova ou
+                                recusa extensões e controla disponibilidade.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <span class="icon"
+                                ><svg>
+                                    <path
+                                        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"
+                                    />
+                                    <path d="m9 12 2 2 4-5" /></svg
+                            ></span>
+                            <h3>Gestor</h3>
+                            <p>
+                                Supervisiona a consistência, valida registos e
+                                apoia a melhoria contínua da biblioteca.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">06. Funcionalidades principais</p>
+                    <h2>Uma biblioteca com operação, descoberta e memória.</h2>
+                    <div class="grid-4">
+                        <article class="card" style="--i: 0">
+                            <h3>Biblioteca</h3>
+                            <p>
+                                Listagem com filtros, pesquisa, paginação e
+                                cards ricos.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <h3>Recursos físicos</h3>
+                            <p>
+                                Localização, condição, prazo máximo, quantidade
+                                e termos.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <h3>Recursos digitais</h3>
+                            <p>
+                                Ficheiros com modo de visualização ou download.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 3">
+                            <h3>Histórico</h3>
+                            <p>
+                                Registo de empréstimos devolvidos, recusados e
+                                atrasados.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 4">
+                            <h3>Alertas</h3>
+                            <p>
+                                Prazos próximos, pedidos de extensão e decisões.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 5">
+                            <h3>Favoritos</h3>
+                            <p>Marcação rápida de recursos importantes.</p>
+                        </article>
+                        <article class="card" style="--i: 6">
+                            <h3>Conta</h3>
+                            <p>
+                                Resumo de recursos, empréstimos feitos e
+                                emprestados.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 7">
+                            <h3>Toasts</h3>
+                            <p>Feedback visual claro após acções relevantes.</p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame split">
+                    <div>
+                        <p class="eyebrow">07. Gestão de recursos</p>
+                        <h2>
+                            Um recurso base, dois comportamentos especializados.
+                        </h2>
+                        <p class="subtitle">
+                            A VUTIVI separa dados comuns em `resources` e
+                            detalhes específicos em tabelas próprias. Isso evita
+                            duplicação e permite evoluir os tipos de recurso com
+                            menor impacto.
+                        </p>
+                    </div>
+                    <div class="grid-2">
+                        <article class="card" style="--i: 0">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                                    <path
+                                        d="M20 22V2H6.5A2.5 2.5 0 0 0 4 4.5v15"
+                                    /></svg
+                            ></span>
+                            <h3>Físico</h3>
+                            <p>
+                                Localização, condição, prazo máximo, aprovação,
+                                extensão e quantidade disponível.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <span class="icon"
+                                ><svg>
+                                    <path
+                                        d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
+                                    />
+                                    <path d="M14 2v6h6" />
+                                    <path d="M9 15h6" /></svg
+                            ></span>
+                            <h3>Digital</h3>
+                            <p>
+                                Ficheiro, tipo de acesso, janela de utilização,
+                                download ou visualização protegida.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">08. Fluxo de empréstimo</p>
+                    <h2>Da solicitação à devolução com estado consistente.</h2>
+                    <div class="diagram glass">
+                        <svg
+                            viewBox="0 0 1040 360"
+                            role="img"
+                            aria-label="Fluxo de empréstimo"
+                        >
+                            <defs>
+                                <marker
+                                    id="arrow"
+                                    markerWidth="10"
+                                    markerHeight="10"
+                                    refX="8"
+                                    refY="3"
+                                    orient="auto"
+                                >
+                                    <path d="M0,0 L0,6 L9,3 z" fill="#FE6807" />
+                                </marker>
+                            </defs>
+                            <path class="line" d="M150 180 H305" />
+                            <path class="line" d="M410 180 H565" />
+                            <path class="line" d="M670 180 H825" />
+                            <rect
+                                class="accent"
+                                x="30"
+                                y="120"
+                                width="130"
+                                height="120"
+                                rx="18"
+                            />
+                            <text x="95" y="170" text-anchor="middle">
+                                Pedido
+                            </text>
+                            <text
+                                class="small"
+                                x="95"
+                                y="194"
+                                text-anchor="middle"
+                            >
+                                Aceite de termos
+                            </text>
+                            <rect
+                                class="box"
+                                x="300"
+                                y="120"
+                                width="130"
+                                height="120"
+                                rx="18"
+                            />
+                            <text x="365" y="170" text-anchor="middle">
+                                Aprovação
+                            </text>
+                            <text
+                                class="small"
+                                x="365"
+                                y="194"
+                                text-anchor="middle"
+                            >
+                                Dono ou automático
+                            </text>
+                            <rect
+                                class="box"
+                                x="560"
+                                y="120"
+                                width="130"
+                                height="120"
+                                rx="18"
+                            />
+                            <text x="625" y="170" text-anchor="middle">
+                                Em uso
+                            </text>
+                            <text
+                                class="small"
+                                x="625"
+                                y="194"
+                                text-anchor="middle"
+                            >
+                                Prazo activo
+                            </text>
+                            <rect
+                                class="box"
+                                x="820"
+                                y="120"
+                                width="160"
+                                height="120"
+                                rx="18"
+                            />
+                            <text x="900" y="170" text-anchor="middle">
+                                Devolução
+                            </text>
+                            <text
+                                class="small"
+                                x="900"
+                                y="194"
+                                text-anchor="middle"
+                            >
+                                Disponibilidade reposta
+                            </text>
+                            <path
+                                class="line"
+                                d="M625 240 C625 310 365 310 365 240"
+                            />
+                            <text
+                                class="small"
+                                x="495"
+                                y="326"
+                                text-anchor="middle"
+                            >
+                                Extensão pode ser pedida, aprovada ou recusada
+                            </text>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame split">
+                    <div>
+                        <p class="eyebrow">09. Extensão e notificações</p>
+                        <h2>O pedido de mais tempo também tem governação.</h2>
+                        <p class="subtitle">
+                            O cliente solicita extensão, o dono do recurso
+                            decide e o sistema informa o resultado. A reserva
+                            mantém metadados de pedido, decisão, data e estado
+                            final, preservando rastreabilidade.
+                        </p>
+                    </div>
+                    <div class="grid-2">
+                        <article class="card" style="--i: 0">
+                            <h3>Pedido</h3>
+                            <p>
+                                O estado passa para extensão pendente e o dono
+                                visualiza a solicitação nas notificações.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <h3>Decisão</h3>
+                            <p>
+                                A aprovação aumenta o prazo; a recusa mantém o
+                                prazo original e devolve a reserva ao estado em
+                                uso.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <h3>Cliente notificado</h3>
+                            <p>
+                                A navbar e a área de alertas mostram aprovação
+                                ou recusa de forma clara.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 3">
+                            <h3>Consistência</h3>
+                            <p>
+                                Após devolução, o estado é limpo e a
+                                disponibilidade volta a permitir novo
+                                empréstimo.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">10. Diagrama de casos de uso</p>
+                    <h2>Interacções principais do sistema.</h2>
+                    <div class="diagram glass">
+                        <svg
+                            viewBox="0 0 1040 470"
+                            role="img"
+                            aria-label="Diagrama de casos de uso"
+                        >
+                            <defs>
+                                <marker
+                                    id="arrow2"
+                                    markerWidth="10"
+                                    markerHeight="10"
+                                    refX="8"
+                                    refY="3"
+                                    orient="auto"
+                                >
+                                    <path d="M0,0 L0,6 L9,3 z" fill="#9f6a47" />
+                                </marker>
+                            </defs>
+                            <rect
+                                class="box"
+                                x="250"
+                                y="40"
+                                width="540"
+                                height="390"
+                                rx="26"
+                            />
+                            <text x="520" y="75" text-anchor="middle">
+                                Sistema VUTIVI
+                            </text>
+                            <circle
+                                cx="110"
+                                cy="115"
+                                r="28"
+                                fill="#fff1e6"
+                                stroke="#FE6807"
+                            />
+                            <path
+                                d="M110 143 v80 M70 175 h80 M110 223 l-42 62 M110 223 l42 62"
+                                stroke="#FE6807"
+                                fill="none"
+                                stroke-width="4"
+                            />
+                            <text x="110" y="330" text-anchor="middle">
+                                Utilizador
+                            </text>
+                            <circle
+                                cx="930"
+                                cy="115"
+                                r="28"
+                                fill="#fff1e6"
+                                stroke="#FE6807"
+                            />
+                            <path
+                                d="M930 143 v80 M890 175 h80 M930 223 l-42 62 M930 223 l42 62"
+                                stroke="#FE6807"
+                                fill="none"
+                                stroke-width="4"
+                            />
+                            <text x="930" y="330" text-anchor="middle">
+                                Dono
+                            </text>
+                            <g>
+                                <ellipse
+                                    class="accent"
+                                    cx="410"
+                                    cy="125"
+                                    rx="110"
+                                    ry="34"
+                                />
+                                <text x="410" y="130" text-anchor="middle">
+                                    Pesquisar recurso
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="410"
+                                    cy="205"
+                                    rx="120"
+                                    ry="34"
+                                />
+                                <text x="410" y="210" text-anchor="middle">
+                                    Solicitar empréstimo
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="410"
+                                    cy="285"
+                                    rx="105"
+                                    ry="34"
+                                />
+                                <text x="410" y="290" text-anchor="middle">
+                                    Pedir extensão
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="410"
+                                    cy="365"
+                                    rx="90"
+                                    ry="34"
+                                />
+                                <text x="410" y="370" text-anchor="middle">
+                                    Devolver
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="650"
+                                    cy="165"
+                                    rx="100"
+                                    ry="34"
+                                />
+                                <text x="650" y="170" text-anchor="middle">
+                                    Gerir recurso
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="650"
+                                    cy="250"
+                                    rx="125"
+                                    ry="34"
+                                />
+                                <text x="650" y="255" text-anchor="middle">
+                                    Aprovar extensão
+                                </text>
+                                <ellipse
+                                    class="box"
+                                    cx="650"
+                                    cy="335"
+                                    rx="126"
+                                    ry="34"
+                                />
+                                <text x="650" y="340" text-anchor="middle">
+                                    Receber notificação
+                                </text>
+                            </g>
+                            <path
+                                class="line"
+                                d="M145 155 C220 130 270 125 300 125"
+                            />
+                            <path
+                                class="line"
+                                d="M145 190 C230 205 270 205 290 205"
+                            />
+                            <path
+                                class="line"
+                                d="M145 235 C230 285 270 285 305 285"
+                            />
+                            <path
+                                class="line"
+                                d="M145 270 C230 365 280 365 320 365"
+                            />
+                            <path
+                                class="line"
+                                d="M895 165 C810 165 780 165 750 165"
+                            />
+                            <path
+                                class="line"
+                                d="M895 220 C800 250 790 250 775 250"
+                            />
+                            <path
+                                class="line"
+                                d="M895 280 C810 335 790 335 776 335"
+                            />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">11. Diagrama de relacionamento</p>
+                    <h2>Modelo de dados principal.</h2>
+                    <div class="diagram glass">
+                        <svg
+                            viewBox="0 0 1040 500"
+                            role="img"
+                            aria-label="Diagrama entidade relacionamento"
+                        >
+                            <defs>
+                                <marker
+                                    id="arrow3"
+                                    markerWidth="10"
+                                    markerHeight="10"
+                                    refX="8"
+                                    refY="3"
+                                    orient="auto"
+                                >
+                                    <path d="M0,0 L0,6 L9,3 z" fill="#9f6a47" />
+                                </marker>
+                            </defs>
+                            <rect
+                                class="accent"
+                                x="60"
+                                y="70"
+                                width="160"
+                                height="90"
+                                rx="16"
+                            />
+                            <text x="140" y="108" text-anchor="middle">
+                                users
+                            </text>
+                            <text
+                                class="small"
+                                x="140"
+                                y="132"
+                                text-anchor="middle"
+                            >
+                                id, name, email
+                            </text>
+                            <rect
+                                class="accent"
+                                x="440"
+                                y="70"
+                                width="170"
+                                height="90"
+                                rx="16"
+                            />
+                            <text x="525" y="108" text-anchor="middle">
+                                resources
+                            </text>
+                            <text
+                                class="small"
+                                x="525"
+                                y="132"
+                                text-anchor="middle"
+                            >
+                                title, type, owner
+                            </text>
+                            <rect
+                                class="box"
+                                x="780"
+                                y="40"
+                                width="190"
+                                height="86"
+                                rx="16"
+                            />
+                            <text x="875" y="78" text-anchor="middle">
+                                physical_resources
+                            </text>
+                            <text
+                                class="small"
+                                x="875"
+                                y="102"
+                                text-anchor="middle"
+                            >
+                                location, max_days
+                            </text>
+                            <rect
+                                class="box"
+                                x="780"
+                                y="145"
+                                width="190"
+                                height="86"
+                                rx="16"
+                            />
+                            <text x="875" y="183" text-anchor="middle">
+                                digital_resources
+                            </text>
+                            <text
+                                class="small"
+                                x="875"
+                                y="207"
+                                text-anchor="middle"
+                            >
+                                file, access_type
+                            </text>
+                            <rect
+                                class="box"
+                                x="430"
+                                y="300"
+                                width="190"
+                                height="100"
+                                rx="16"
+                            />
+                            <text x="525" y="340" text-anchor="middle">
+                                reservations
+                            </text>
+                            <text
+                                class="small"
+                                x="525"
+                                y="364"
+                                text-anchor="middle"
+                            >
+                                status, dates, return
+                            </text>
+                            <rect
+                                class="box"
+                                x="70"
+                                y="310"
+                                width="180"
+                                height="90"
+                                rx="16"
+                            />
+                            <text x="160" y="348" text-anchor="middle">
+                                favorites
+                            </text>
+                            <text
+                                class="small"
+                                x="160"
+                                y="372"
+                                text-anchor="middle"
+                            >
+                                resource_user
+                            </text>
+                            <rect
+                                class="box"
+                                x="765"
+                                y="310"
+                                width="210"
+                                height="90"
+                                rx="16"
+                            />
+                            <text x="870" y="348" text-anchor="middle">
+                                terms
+                            </text>
+                            <text
+                                class="small"
+                                x="870"
+                                y="372"
+                                text-anchor="middle"
+                            >
+                                conditions, acceptances
+                            </text>
+                            <path class="line" d="M220 115 H440" />
+                            <text
+                                class="small"
+                                x="330"
+                                y="101"
+                                text-anchor="middle"
+                            >
+                                1:N dono
+                            </text>
+                            <path class="line" d="M610 100 H780" />
+                            <path
+                                class="line"
+                                d="M610 130 C690 130 710 188 780 188"
+                            />
+                            <path class="line" d="M525 160 V300" />
+                            <text class="small" x="560" y="235">1:N</text>
+                            <path
+                                class="line"
+                                d="M220 150 C300 260 390 325 430 340"
+                            />
+                            <text class="small" x="310" y="285">
+                                1:N reservas
+                            </text>
+                            <path class="line" d="M220 355 H430" />
+                            <path class="line" d="M610 355 H765" />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">12. Diagrama de classes</p>
+                    <h2>Classes de domínio e responsabilidades.</h2>
+                    <div class="diagram glass">
+                        <svg
+                            viewBox="0 0 1040 520"
+                            role="img"
+                            aria-label="Diagrama de classes"
+                        >
+                            <defs>
+                                <marker
+                                    id="arrow4"
+                                    markerWidth="10"
+                                    markerHeight="10"
+                                    refX="8"
+                                    refY="3"
+                                    orient="auto"
+                                >
+                                    <path d="M0,0 L0,6 L9,3 z" fill="#9f6a47" />
+                                </marker>
+                            </defs>
+                            <g>
+                                <rect
+                                    class="accent"
+                                    x="50"
+                                    y="70"
+                                    width="190"
+                                    height="130"
+                                    rx="14"
+                                />
+                                <text x="145" y="100" text-anchor="middle">
+                                    User
+                                </text>
+                                <text class="small" x="72" y="132">
+                                    + resources()
+                                </text>
+                                <text class="small" x="72" y="154">
+                                    + reservations()
+                                </text>
+                                <text class="small" x="72" y="176">
+                                    + favoriteResources()
+                                </text>
+                                <rect
+                                    class="accent"
+                                    x="425"
+                                    y="55"
+                                    width="210"
+                                    height="150"
+                                    rx="14"
+                                />
+                                <text x="530" y="86" text-anchor="middle">
+                                    Resource
+                                </text>
+                                <text class="small" x="448" y="116">
+                                    + owner()
+                                </text>
+                                <text class="small" x="448" y="138">
+                                    + physicalResource()
+                                </text>
+                                <text class="small" x="448" y="160">
+                                    + digitalResource()
+                                </text>
+                                <text class="small" x="448" y="182">
+                                    + reservations()
+                                </text>
+                                <rect
+                                    class="box"
+                                    x="765"
+                                    y="55"
+                                    width="220"
+                                    height="110"
+                                    rx="14"
+                                />
+                                <text x="875" y="86" text-anchor="middle">
+                                    PhysicalResource
+                                </text>
+                                <text class="small" x="790" y="118">
+                                    location, condition
+                                </text>
+                                <text class="small" x="790" y="140">
+                                    max_loan_days
+                                </text>
+                                <rect
+                                    class="box"
+                                    x="765"
+                                    y="205"
+                                    width="220"
+                                    height="110"
+                                    rx="14"
+                                />
+                                <text x="875" y="236" text-anchor="middle">
+                                    DigitalResource
+                                </text>
+                                <text class="small" x="790" y="268">
+                                    file_path
+                                </text>
+                                <text class="small" x="790" y="290">
+                                    access_type
+                                </text>
+                                <rect
+                                    class="box"
+                                    x="425"
+                                    y="325"
+                                    width="210"
+                                    height="145"
+                                    rx="14"
+                                />
+                                <text x="530" y="356" text-anchor="middle">
+                                    Reservation
+                                </text>
+                                <text class="small" x="448" y="388">
+                                    status, start_date
+                                </text>
+                                <text class="small" x="448" y="410">
+                                    end_date, returned_at
+                                </text>
+                                <text class="small" x="448" y="432">
+                                    canExtend()
+                                </text>
+                                <rect
+                                    class="box"
+                                    x="70"
+                                    y="325"
+                                    width="210"
+                                    height="110"
+                                    rx="14"
+                                />
+                                <text x="175" y="356" text-anchor="middle">
+                                    TermAndCondition
+                                </text>
+                                <text class="small" x="95" y="388">
+                                    scope, title, version
+                                </text>
+                                <text class="small" x="95" y="410">
+                                    activeByScope()
+                                </text>
+                            </g>
+                            <path class="line" d="M240 125 H425" />
+                            <path class="line" d="M635 115 H765" />
+                            <path
+                                class="line"
+                                d="M635 145 C700 145 700 260 765 260"
+                            />
+                            <path class="line" d="M530 205 V325" />
+                            <path
+                                class="line"
+                                d="M240 180 C310 260 395 330 425 360"
+                            />
+                            <path class="line" d="M280 380 H425" />
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">13. Arquitectura técnica</p>
+                    <h2>Laravel MVC com responsabilidades separadas.</h2>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <h3>Controllers</h3>
+                            <p>
+                                Recebem pedidos HTTP, coordenam actions e
+                                devolvem views, redirects ou JSON.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <h3>Models</h3>
+                            <p>
+                                Representam entidades, relacionamentos e regras
+                                como `canExtend()` e scopes.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <h3>Actions</h3>
+                            <p>
+                                Isolam operações de negócio como criação,
+                                devolução e sincronização de disponibilidade.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 3">
+                            <h3>Requests</h3>
+                            <p>
+                                Validam dados de entrada e normalizam payloads
+                                antes da persistência.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 4">
+                            <h3>Blade Views</h3>
+                            <p>
+                                Renderizam interface, componentes, cards,
+                                navbar, sidebar e toasts.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 5">
+                            <h3>Migrations e Tests</h3>
+                            <p>
+                                Definem a base de dados e protegem regras
+                                críticas contra regressões.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame split">
+                    <div>
+                        <p class="eyebrow">14. Interface e experiência</p>
+                        <h2>Uma interface orientada à leitura e à acção.</h2>
+                        <p class="subtitle">
+                            A UI valoriza pesquisa, contexto, filtros, cards com
+                            métricas, feedback visual e estados compreensíveis.
+                            A experiência funciona em desktop e mobile, com
+                            suporte a tema escuro.
+                        </p>
+                    </div>
+                    <div class="visual glass">
+                        <img
+                            src="../public/img/png/books.png"
+                            alt="Livros usados como recurso visual"
+                        />
+                        <div class="floating-card">
+                            <strong>Biblioteca explorável</strong>
+                            <p class="text">
+                                Cards, filtros, favoritos, notificações e
+                                navegação lateral reduzem esforço de utilização.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">15. Segurança e validação</p>
+                    <h2>O sistema protege dados e fluxos sensíveis.</h2>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <span class="icon"
+                                ><svg>
+                                    <path
+                                        d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"
+                                    /></svg
+                            ></span>
+                            <h3>Autenticação</h3>
+                            <p>
+                                Rotas privadas usam middleware `auth`; login e
+                                registo usam sessão segura.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M9 11 12 14 22 4" />
+                                    <path
+                                        d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
+                                    /></svg
+                            ></span>
+                            <h3>Form Requests</h3>
+                            <p>
+                                Validações tratam uploads, datas, tipos, campos
+                                obrigatórios e consistência de recurso.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <span class="icon"
+                                ><svg>
+                                    <path d="M16 21v-2a4 4 0 0 0-8 0v2" />
+                                    <circle cx="12" cy="7" r="4" />
+                                    <path d="M20 8v6" />
+                                    <path d="M23 11h-6" /></svg
+                            ></span>
+                            <h3>Autorização</h3>
+                            <p>
+                                Somente o dono gere recursos e decide extensão.
+                                O utilizador não empresta o próprio recurso.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame split">
+                    <div>
+                        <p class="eyebrow">16. Testes e qualidade</p>
+                        <h2>
+                            Testes protegem o comportamento percebido pelo
+                            utilizador.
+                        </h2>
+                        <p class="subtitle">
+                            A aplicação possui testes de autenticação, CRUD de
+                            recursos, reservas, disponibilidade, devolução e
+                            elegibilidade após retorno. Eles confirmam que o
+                            ciclo de empréstimo permanece consistente.
+                        </p>
+                    </div>
+                    <div class="grid-2">
+                        <div class="metric">
+                            <strong>16</strong
+                            ><span>Testes automatizados executados</span>
+                        </div>
+                        <div class="metric">
+                            <strong>118</strong
+                            ><span>Asserções de comportamento</span>
+                        </div>
+                        <article class="card" style="--i: 0">
+                            <h3>Reserva</h3>
+                            <p>
+                                Criação, edição, devolução, disponibilidade e
+                                reempréstimo são verificados.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <h3>Autenticação</h3>
+                            <p>
+                                Login, logout e erros de credenciais mantêm
+                                contrato HTTP previsível.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide">
+                <div class="frame">
+                    <p class="eyebrow">17. Conclusão</p>
+                    <h2>
+                        A VUTIVI transforma recursos em fluxo organizado de
+                        conhecimento.
+                    </h2>
+                    <p class="subtitle">
+                        A solução combina biblioteca física e digital,
+                        empréstimos, notificações, termos, favoritos, pesquisa e
+                        uma arquitectura Laravel extensível. Como evolução, a
+                        plataforma pode receber APIs, notificações persistentes,
+                        broadcasting, dashboards, relatórios e analytics.
+                    </p>
+                    <div class="grid-3">
+                        <article class="card" style="--i: 0">
+                            <h3>Benefício institucional</h3>
+                            <p>
+                                Melhora organização, controlo e acesso aos
+                                materiais partilhados.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 1">
+                            <h3>Benefício para o utilizador</h3>
+                            <p>
+                                Facilita descoberta, acompanhamento e uso
+                                responsável dos recursos.
+                            </p>
+                        </article>
+                        <article class="card" style="--i: 2">
+                            <h3>Próximos passos</h3>
+                            <p>
+                                Persistir notificações, criar dashboards e
+                                disponibilizar relatórios analíticos.
+                            </p>
+                        </article>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="dots" id="dots" aria-label="Navegação por slides"></nav>
+        <div class="kbd">Use ← → para navegar</div>
+
+        <script>
+            // Navegação estilo apresentação: mantém apenas um slide activo e usa View Transitions quando o navegador suporta.
+            const slides = [...document.querySelectorAll(".slide")];
+            const dots = document.getElementById("dots");
+            const progress = document.getElementById("progress");
+            const current = document.getElementById("current");
+            const total = document.getElementById("total");
+            let index = 0;
+            let busy = false;
+
+            total.textContent = String(slides.length).padStart(2, "0");
+
+            slides.forEach((_, i) => {
+                const dot = document.createElement("button");
+                dot.className = "dot" + (i === 0 ? " is-active" : "");
+                dot.type = "button";
+                dot.setAttribute("aria-label", `Ir para o slide ${i + 1}`);
+                dot.addEventListener("click", () => goTo(i));
+                dots.appendChild(dot);
+            });
+
+            function render(nextIndex, direction = 1) {
+                if (
+                    busy ||
+                    nextIndex === index ||
+                    nextIndex < 0 ||
+                    nextIndex >= slides.length
+                )
+                    return;
+                busy = true;
+
+                const update = () => {
+                    slides[index].classList.remove("is-active");
+                    slides[index].classList.add(
+                        direction > 0 ? "is-leaving-left" : "is-leaving-right",
+                    );
+                    index = nextIndex;
+                    slides[index].classList.add("is-active");
+                    setTimeout(
+                        () =>
+                            slides.forEach((slide) =>
+                                slide.classList.remove(
+                                    "is-leaving-left",
+                                    "is-leaving-right",
+                                ),
+                            ),
+                        700,
+                    );
+                    syncUi();
+                };
+
+                if (document.startViewTransition) {
+                    document
+                        .startViewTransition(update)
+                        .finished.finally(() => (busy = false));
+                } else {
+                    update();
+                    setTimeout(() => (busy = false), 760);
+                }
+            }
+
+            function syncUi() {
+                current.textContent = String(index + 1).padStart(2, "0");
+                progress.style.width = `${((index + 1) / slides.length) * 100}%`;
+                [...dots.children].forEach((dot, i) =>
+                    dot.classList.toggle("is-active", i === index),
+                );
+            }
+
+            function goTo(i) {
+                render(i, i > index ? 1 : -1);
+            }
+            function next() {
+                render(Math.min(index + 1, slides.length - 1), 1);
+            }
+            function prev() {
+                render(Math.max(index - 1, 0), -1);
+            }
+
+            document.getElementById("next").addEventListener("click", next);
+            document.getElementById("prev").addEventListener("click", prev);
+            document
+                .getElementById("theme")
+                .addEventListener("click", () =>
+                    document.body.classList.toggle("dark"),
+                );
+            document.addEventListener("keydown", (event) => {
+                if (event.key === "ArrowRight" || event.key === "PageDown")
+                    next();
+                if (event.key === "ArrowLeft" || event.key === "PageUp") prev();
+                if (event.key === "Home") goTo(0);
+                if (event.key === "End") goTo(slides.length - 1);
+            });
+
+            syncUi();
+        </script>
+    </body>
+</html>
