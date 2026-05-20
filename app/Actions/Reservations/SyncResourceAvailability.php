@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reservations;
 
+use App\Models\Reservation;
 use App\Models\Resource;
 
 /**
@@ -14,10 +15,15 @@ class SyncResourceAvailability
      */
     public function handle(Resource $resource): void
     {
-        $openReservations = $resource->reservations()->whereNull('returned_at')->count();
+        if ($resource->type === 'digital') {
+            $resource->update(['status' => 'available']);
+            return;
+        }
+
+        $available = (int) $resource->quantity_available;
 
         $resource->update([
-            'status' => $openReservations >= $resource->quantity_available ? 'reserved' : 'available',
+            'status' => $available > 0 ? 'available' : 'reserved',
         ]);
     }
 }

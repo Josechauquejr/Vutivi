@@ -19,6 +19,7 @@ class Resource extends Model
         'type',
         'status',
         'quantity_available',
+        'downloads_count',
         'owner_id',
     ];
 

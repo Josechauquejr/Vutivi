@@ -38,9 +38,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/borrowed', [ResourceController::class, 'borrowed'])->name('borrowed');
     Route::get('/lent', [ResourceController::class, 'lent'])->name('lent');
     Route::get('/loan-alerts', [ResourceController::class, 'loanAlerts'])->name('loan-alerts');
+    Route::get('/loan-history', [ReservationController::class, 'history'])->name('loan-history');
     Route::get('/account', [ResourceController::class, 'account'])->name('account');
     Route::get('/resources/create', [ResourceController::class, 'create'])->name('resources.create');
     Route::post('/resources/{resource}/favorite', [ResourceController::class, 'toggleFavorite'])->name('resources.favorite');
+    Route::get('/resources/{resource}/digital/view', [ResourceController::class, 'viewDigital'])->name('resources.digital.view');
+    Route::get('/resources/{resource}/digital/download', [ResourceController::class, 'downloadDigital'])->name('resources.digital.download');
 
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('{user}/edit', 'edit')->name('edit');
@@ -51,6 +54,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('resources', ResourceController::class)->only(['index', 'show', 'destroy']);
 
     Route::controller(ReservationController::class)->prefix('reservations')->name('reservations.')->group(function () {
+        Route::patch('{id}/approve', 'approve')->name('approve');
+        Route::patch('{id}/deny', 'deny')->name('deny');
         Route::patch('{id}/return', 'return')->name('return');
         Route::patch('{id}/request-extension', 'requestExtension')->name('extension.request');
         Route::patch('{id}/approve-extension', 'approveExtension')->name('extension.approve');

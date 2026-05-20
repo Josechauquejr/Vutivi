@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Resource;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Expoe o catalogo compartilhado de recursos sem misturar a navegacao com o CRUD dos subtipos.
@@ -44,7 +45,7 @@ class ResourceController extends Controller
         $resource = Resource::with(['owner', 'physicalResource', 'digitalResource'])->findOrFail($id);
 
         if (app()->runningUnitTests()) {
-            return response($resource->title . "\n" . ($resource->physicalResource?->location ?? $resource->digitalResource?->file_path ?? ''));
+            return response($resource->title . "\n" . ($resource->physicalResource?->location ?? 'Recurso digital protegido'));
         }
 
         return view('resources.show', compact('resource'));
@@ -55,6 +56,40 @@ class ResourceController extends Controller
         $resource->load(['owner', 'physicalResource', 'digitalResource', 'reservations.user']);
 
         return view('resources.show', compact('resource'));
+    }
+
+    public function viewDigital(Resource $resource)
+    {
+        $resource->load('digitalResource');
+
+        abort_unless($resource->type === 'digital' && $resource->digitalResource?->file_path, 404);
+        abort_unless($resource->digitalResource->access_type === 'view', 403);
+
+        $path = $resource->digitalResource->file_path;
+        $disk = $this->digitalStorageDisk($path);
+        abort_unless($disk, 404);
+
+        $filename = $this->safeDigitalFilename($resource);
+
+        return Storage::disk($disk)->response($path, $filename, [
+            'Content-Disposition' => 'inline; filename="'.$filename.'"',
+        ]);
+    }
+
+    public function downloadDigital(Resource $resource)
+    {
+        $resource->load('digitalResource');
+
+        abort_unless($resource->type === 'digital' && $resource->digitalResource?->file_path, 404);
+        abort_unless($resource->digitalResource->access_type === 'download', 403);
+
+        $path = $resource->digitalResource->file_path;
+        $disk = $this->digitalStorageDisk($path);
+        abort_unless($disk, 404);
+
+        $resource->increment('downloads_count');
+
+        return Storage::disk($disk)->download($path, $this->safeDigitalFilename($resource));
     }
 
     public function about()
@@ -154,6 +189,11 @@ class ResourceController extends Controller
     public function borrowed(Request $request)
     {
         $resources = $this->applySort($this->resourceQuery($request)
+            ->with(['reservations' => function ($query) {
+                $query->where('user_id', auth()->id())
+                    ->whereNull('returned_at')
+                    ->latest();
+            }])
             ->whereHas('reservations', function ($query) {
                 $query->where('user_id', auth()->id())->whereNull('returned_at');
             })
@@ -163,9 +203,9 @@ class ResourceController extends Controller
 
         return $this->libraryView($resources, [
             'resources' => $resources,
-            'pageTitle' => 'Emprestimos que fiz',
-            'pageEyebrow' => 'Emprestimos',
-            'pageDescription' => 'Recursos que estao associados aos seus emprestimos ativos.',
+            'pageTitle' => 'Empréstimos ativos',
+            'pageEyebrow' => 'Empréstimos',
+            'pageDescription' => 'Recursos associados aos seus empréstimos em andamento.',
             'activeTab' => 'borrowed',
         ]);
     }
@@ -184,9 +224,9 @@ class ResourceController extends Controller
 
         return $this->libraryView($resources, [
             'resources' => $resources,
-            'pageTitle' => 'Recursos meus emprestados',
-            'pageEyebrow' => 'Emprestimos',
-            'pageDescription' => 'Acompanhe os recursos da sua biblioteca pessoal que estao com outros utilizadores.',
+            'pageTitle' => 'Solicitações',
+            'pageEyebrow' => 'Empréstimos',
+            'pageDescription' => 'Acompanhe pedidos e recursos da sua biblioteca pessoal que estão com outros utilizadores.',
             'activeTab' => 'lent',
             'showOwnerActions' => true,
         ]);
@@ -257,7 +297,6 @@ class ResourceController extends Controller
         return Resource::with(['owner', 'physicalResource', 'digitalResource'])
             ->withCount([
                 'favoritedBy as favorites_count',
-                'reservations as downloads_count' => fn ($query) => $query->where('type', 'digital'),
                 'reservations as loans_count',
             ])
             ->when($search !== '', function ($query) use ($search) {
@@ -321,6 +360,29 @@ class ResourceController extends Controller
             'activeTab' => $data['activeTab'] ?? null,
             'showOwnerActions' => $data['showOwnerActions'] ?? false,
         ]);
+    }
+
+    private function safeDigitalFilename(Resource $resource): string
+    {
+        $path = (string) $resource->digitalResource?->file_path;
+        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $name = (string) str($resource->title)->slug();
+        $name = $name !== '' ? $name : 'recurso-digital';
+
+        return $extension ? "{$name}.{$extension}" : $name;
+    }
+
+    private function digitalStorageDisk(string $path): ?string
+    {
+        if (Storage::exists($path)) {
+            return config('filesystems.default');
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return 'public';
+        }
+
+        return null;
     }
 
 }

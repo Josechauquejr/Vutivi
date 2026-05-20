@@ -10,7 +10,7 @@
         </span>
         <span>
             <span class="block text-sm font-black text-[#241b14] dark:text-white">Foto de capa</span>
-            <span class="mt-1 block text-xs leading-5 text-[#806856] dark:text-[#bcae9f]">Arraste uma imagem ou clique para selecionar. A pré-visualização atualiza em tempo real.</span>
+            <span class="mt-1 block text-xs leading-5 text-[#806856] dark:text-[#bcae9f]">Arraste uma imagem ou clique para selecionar.</span>
         </span>
         <input data-upload-input data-preview-target="#digital-cover-preview" type="file" name="cover_image" accept="image/*" class="sr-only">
     </label>
@@ -20,7 +20,7 @@
             <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Ficheiro digital</span>
             <input type="file" name="file_path" {{ $digital ? '' : 'required' }} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4,.mov,.webm,.zip" class="min-h-12 w-full rounded-xl border border-dashed border-[#decbb8] bg-[#fffaf5] px-3 py-3 text-sm outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-[#FE6807] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">
             @if ($digital?->file_path)
-                <p class="mt-2 text-xs font-semibold text-[#7f6652] dark:text-[#cfc5ba]">Atual: {{ $digital->file_path }}</p>
+                <p class="mt-2 text-xs font-semibold text-[#7f6652] dark:text-[#cfc5ba]">Ficheiro atual carregado.</p>
             @endif
         </label>
     </div>
@@ -28,37 +28,13 @@
 
 <div class="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
     <label>
-        <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Titulo</span>
+        <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Título</span>
         <span class="field-shell block">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
             <input name="title" value="{{ old('title', $resource?->title) }}" required class="premium-input">
         </span>
     </label>
 
-</div>
-
-<label>
-    <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Descricao</span>
-    <textarea name="description" rows="5" class="w-full rounded-xl border border-[#decbb8] bg-[#fffaf5] px-4 py-3 text-sm outline-none focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">{{ old('description', $resource?->description) }}</textarea>
-    <span class="helper-text">Inclua area de estudo, tags naturais e contexto de uso.</span>
-</label>
-
-<div class="grid gap-5 sm:grid-cols-3">
-    <label>
-        <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Estado</span>
-        <select name="status" class="premium-input">
-            @foreach (['available' => 'Disponível', 'reserved' => 'Reservado', 'active' => 'Em uso'] as $value => $label)
-                <option value="{{ $value }}" @selected(old('status', $resource?->status ?? 'available') === $value)>{{ $label }}</option>
-            @endforeach
-        </select>
-    </label>
-    <label>
-        <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Quantidade de acessos</span>
-        <span class="field-shell block">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M8 12h8"/></svg>
-            <input type="number" name="quantity_available" min="1" inputmode="numeric" value="{{ old('quantity_available', $resource?->quantity_available ?? 1) }}" required class="premium-input">
-        </span>
-    </label>
     <label>
         <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Limite de acesso</span>
         <span class="field-shell block">
@@ -68,9 +44,14 @@
     </label>
 </div>
 
+<label>
+    <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Descrição</span>
+    <textarea name="description" rows="5" class="w-full rounded-xl border border-[#decbb8] bg-[#fffaf5] px-4 py-3 text-sm outline-none focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">{{ old('description', $resource?->description) }}</textarea>
+</label>
+
 <div class="grid gap-5 sm:grid-cols-[0.9fr_1.1fr]">
     <fieldset>
-        <legend class="mb-2 block text-sm font-semibold text-[#241b14] dark:text-white">Permissao</legend>
+        <legend class="mb-2 block text-sm font-semibold text-[#241b14] dark:text-white">Permissão</legend>
         <div class="grid grid-cols-2 gap-2">
             @foreach (['view' => 'Visualizar', 'download' => 'Download'] as $value => $label)
                 <label class="flex min-h-12 items-center justify-center rounded-xl border border-[#decbb8] bg-[#fffaf5] text-sm font-bold text-[#5f4632] has-[:checked]:border-[#FE6807] has-[:checked]:bg-[#fff1e6] has-[:checked]:text-[#FE6807] dark:border-[#332820] dark:bg-[#050505] dark:text-[#d8cec3]">
@@ -83,7 +64,7 @@
 
     <div class="rounded-xl border border-[#eadfce] bg-[#fffaf5] p-4 text-sm leading-6 text-[#66594d] dark:border-[#332820] dark:bg-[#0f0d0b] dark:text-[#cfc5ba]">
         <strong class="block text-[#241b14] dark:text-white">Acesso digital</strong>
-        Recursos digitais aparecem na biblioteca sem prazo de devolução. O limite acima controla a janela de acesso.
+        Recursos digitais não usam cópias físicas, quantidade ou devolução. O ficheiro é servido por rotas protegidas.
     </div>
 </div>
 

@@ -23,8 +23,8 @@
 
     $statusLabels = [
         'available' => 'Disponível',
-        'reserved' => 'Reservado',
-        'active' => 'Em uso',
+        'reserved' => 'Indisponível',
+        'active' => 'Disponível',
     ];
 
     $fileTypeLabels = [
@@ -42,8 +42,9 @@
         'zip' => 'Arquivo',
     ];
 
-    $resourceCards = $resourceItems->values()->map(function ($resource, $index) use ($coverClasses, $statusLabels, $fileTypeLabels, $showOwnerActions) {
+    $resourceCards = $resourceItems->values()->map(function ($resource, $index) use ($coverClasses, $statusLabels, $fileTypeLabels, $showOwnerActions, $activeTab) {
         $isDigital = $resource->type === 'digital';
+        $activeReservation = $activeTab === 'borrowed' ? $resource->reservations->first() : null;
         $path = $resource->digitalResource?->file_path;
         $extension = $path ? strtolower(pathinfo($path, PATHINFO_EXTENSION)) : null;
         $fileType = $isDigital ? ($fileTypeLabels[$extension] ?? strtoupper($extension ?: 'Digital')) : 'Livro fisico';
@@ -70,14 +71,16 @@
             'cover_author' => strtoupper($resource->owner?->name ?? 'VUTIVI'),
             'tag' => $isDigital ? $fileType : 'Livro',
             'status' => $statusLabels[$resource->status] ?? ucfirst($resource->status),
-            'available_count' => (int) $resource->quantity_available,
+            'available_count' => $isDigital ? null : (int) $resource->quantity_available,
             'can_manage' => auth()->check() && (int) $resource->owner_id === (int) auth()->id(),
             'is_favorited' => (bool) ($resource->is_favorited ?? false),
             'favorites_count' => (int) ($resource->favorites_count ?? 0),
             'downloads_count' => (int) ($resource->downloads_count ?? 0),
             'loans_count' => (int) ($resource->loans_count ?? 0),
             'show_owner_actions' => $showOwnerActions,
-            'show_route' => $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id),
+            'show_route' => $activeReservation
+                ? route('reservations.show', $activeReservation->id)
+                : ($resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id)),
             'edit_route' => $isDigital ? route('digital-resources.edit', $resource->id) : route('physical-resources.edit', $resource->id),
             'delete_route' => $isDigital ? route('digital-resources.destroy', $resource->id) : route('physical-resources.destroy', $resource->id),
             'favorite_route' => route('resources.favorite', $resource->id),

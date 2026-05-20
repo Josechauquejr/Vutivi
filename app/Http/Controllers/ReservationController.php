@@ -14,6 +14,8 @@ use App\Models\Reservation;
 use App\Models\Resource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Coordena regras de emprestimo, verificacao de disponibilidade e atualizacao do ciclo de vida da reserva.
@@ -47,6 +49,42 @@ class ReservationController extends Controller
         return view('reservations.index', compact('reservations'));
     }
 
+    public function history(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+        $status = (string) $request->query('status', '');
+
+        $reservations = Reservation::with(['resource.owner', 'user'])
+            ->where(function ($query) {
+                $query->where('user_id', auth()->id())
+                    ->orWhereHas('resource', fn ($query) => $query->where('owner_id', auth()->id()));
+            })
+            ->where(function ($query) {
+                $query->whereNotNull('returned_at')
+                    ->orWhereIn('status', [Reservation::STATUS_RETURNED, Reservation::STATUS_DENIED, Reservation::STATUS_CANCELLED])
+                    ->orWhere(fn ($query) => $query->whereNull('returned_at')->whereDate('end_date', '<', now()->toDateString()));
+            })
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query->whereHas('resource', fn ($query) => $query->where('title', 'like', "%{$search}%"))
+                        ->orWhereHas('user', fn ($query) => $query->where('name', 'like', "%{$search}%"));
+                });
+            })
+            ->when(in_array($status, ['returned', 'denied', 'cancelled', 'overdue'], true), function ($query) use ($status) {
+                if ($status === 'overdue') {
+                    $query->whereNull('returned_at')->whereDate('end_date', '<', now()->toDateString());
+                    return;
+                }
+
+                $query->where('status', $status);
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('reservations.history', compact('reservations'));
+    }
+
     /**
      * Exibe o formulario de criacao de reserva.
      */
@@ -78,8 +116,8 @@ class ReservationController extends Controller
         $this->syncResourceAvailability->handle($resource->fresh());
 
         return redirect()
-            ->route('resources.show', $resource->id)
-            ->with('success', 'Emprestimo solicitado com sucesso.');
+            ->route('reservations.show', $reservation->id)
+            ->with('success', 'Empréstimo solicitado com sucesso.');
     }
 
     /**
@@ -102,6 +140,9 @@ class ReservationController extends Controller
     public function edit(int $id)
     {
         $reservation = $this->reservation($id);
+        $reservation->load('resource');
+        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+
         $resources = $this->availableResourcesForForms();
         $users = $this->availableUsersForForms();
 
@@ -118,11 +159,15 @@ class ReservationController extends Controller
     public function update(UpdateReservationRequest $request, int $id)
     {
         $reservation = $this->reservation($id);
+        $reservation->load('resource');
+        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+
         $previousResource = $reservation->resource;
         $reservationData = $request->reservationData();
         $resource = $this->reservationResource((int) $reservationData['resource_id']);
 
         $this->validateReservationAgainstResource->handle($resource, $reservationData, $reservation);
+        $this->transferHeldCopyIfResourceChanged($reservation, $previousResource, $resource);
         $this->updateReservation->handle($reservation, $reservationData);
 
         $this->syncResourceAvailability->handle($resource->fresh());
@@ -137,6 +182,9 @@ class ReservationController extends Controller
     public function destroy(int $id)
     {
         $reservation = $this->reservation($id);
+        $reservation->load('resource');
+        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+
         $resource = $reservation->resource;
 
         $this->deleteReservation->handle($reservation);
@@ -150,12 +198,70 @@ class ReservationController extends Controller
      */
     public function return(int $id)
     {
-        $reservation = $this->reservation($id);
+        $reservation = $this->reservationDetails($id);
+        abort_unless(
+            (int) $reservation->user_id === (int) auth()->id()
+                || (int) $reservation->resource?->owner_id === (int) auth()->id(),
+            403
+        );
 
         $this->returnReservation->handle($reservation);
         $this->syncResourceAvailability->handle($reservation->resource->fresh());
 
+        if (request()->expectsJson()) {
+            $resource = $reservation->resource->fresh();
+
+            return response()->json([
+                'message' => 'Recurso marcado como devolvido com sucesso.',
+                'status' => 'returned',
+                'status_label' => 'Devolvido',
+                'copies_available' => (int) $resource->quantity_available,
+                'resource_status' => $resource->status,
+                'resource_status_label' => $resource->status === 'available' ? 'Disponível' : 'Indisponível',
+            ]);
+        }
+
         return redirect()->route('reservations.show', $reservation->id)->with('success', 'Empréstimo marcado como devolvido.');
+    }
+
+    public function approve(int $id)
+    {
+        $reservation = $this->reservationDetails($id);
+        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+
+        DB::transaction(function () use ($id) {
+            $reservation = Reservation::with('resource')->whereKey($id)->lockForUpdate()->firstOrFail();
+            $resource = Resource::whereKey($reservation->resource_id)->lockForUpdate()->firstOrFail();
+
+            if ((int) $resource->quantity_available <= 0) {
+                throw ValidationException::withMessages([
+                    'resource_id' => 'Sem cópias disponíveis.',
+                ]);
+            }
+
+            $resource->decrement('quantity_available');
+            $resource->refresh();
+            $resource->update(['status' => (int) $resource->quantity_available > 0 ? 'available' : 'reserved']);
+
+            $reservation->update([
+                'status' => Reservation::STATUS_IN_USE,
+                'approved_by' => auth()->id(),
+                'approved_at' => now(),
+                'picked_up_at' => now(),
+            ]);
+        });
+
+        return back()->with('success', 'Pedido aprovado. O recurso entrou em uso.');
+    }
+
+    public function deny(int $id)
+    {
+        $reservation = $this->reservationDetails($id);
+        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+
+        $reservation->update(['status' => Reservation::STATUS_DENIED]);
+
+        return back()->with('error', 'Pedido recusado.');
     }
 
     public function requestExtension(Request $request, int $id)
@@ -167,6 +273,15 @@ class ReservationController extends Controller
             'status' => Reservation::STATUS_EXTENSION_PENDING,
             'extension_reason' => $request->input('extension_reason', 'Pedido de extensão solicitado pelo utilizador.'),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Pedido enviado com sucesso. Aguarde resposta do proprietário do recurso.',
+                'status' => Reservation::STATUS_EXTENSION_PENDING,
+                'status_label' => 'Extensão solicitada',
+                'extension_reason' => $reservation->fresh()->extension_reason,
+            ]);
+        }
 
         return back()->with('success', 'Pedido de extensão enviado ao dono do recurso.');
     }
@@ -232,7 +347,7 @@ class ReservationController extends Controller
      */
     private function reservationDetails(int $id): Reservation
     {
-        return Reservation::with(['resource', 'user'])->findOrFail($id);
+        return Reservation::with(['resource.owner', 'user', 'approver'])->findOrFail($id);
     }
 
     /**
@@ -245,5 +360,33 @@ class ReservationController extends Controller
         }
 
         $this->syncResourceAvailability->handle($previousResource->fresh());
+    }
+
+    private function transferHeldCopyIfResourceChanged(Reservation $reservation, Resource $previousResource, Resource $currentResource): void
+    {
+        if ($previousResource->is($currentResource) || $previousResource->type !== 'physical' || $currentResource->type !== 'physical') {
+            return;
+        }
+
+        if (! in_array($reservation->status, Reservation::COPY_HOLDING_STATUSES, true) || $reservation->returned_at !== null) {
+            return;
+        }
+
+        DB::transaction(function () use ($previousResource, $currentResource) {
+            $old = Resource::whereKey($previousResource->id)->lockForUpdate()->first();
+            $new = Resource::whereKey($currentResource->id)->lockForUpdate()->first();
+
+            if ($old && (int) $old->quantity_available <= 0) {
+                $old->increment('quantity_available');
+                $old->refresh();
+                $old->update(['status' => 'available']);
+            }
+
+            if ($new && (int) $new->quantity_available > 0) {
+                $new->decrement('quantity_available');
+                $new->refresh();
+                $new->update(['status' => (int) $new->quantity_available > 0 ? 'available' : 'reserved']);
+            }
+        });
     }
 }

@@ -34,6 +34,14 @@ class Reservation extends Model
     const STATUS_EXTENDED = 'extended';
     const STATUS_RETURNED = 'returned';
     const STATUS_CANCELLED = 'cancelled';
+    const STATUS_DENIED = 'denied';
+
+    public const COPY_HOLDING_STATUSES = [
+        self::STATUS_APPROVED,
+        self::STATUS_IN_USE,
+        self::STATUS_EXTENSION_PENDING,
+        self::STATUS_EXTENDED,
+    ];
 
     /**
      * Retorna os casts aplicados aos atributos do modelo.
@@ -89,7 +97,8 @@ class Reservation extends Model
      */
     public function canExtend(): bool
     {
-        return $this->status === self::STATUS_IN_USE &&
+        return in_array($this->status, [self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
+               $this->resource?->physicalResource &&
                $this->extension_count < $this->resource->physicalResource->max_extensions &&
                $this->resource->physicalResource->allow_extension;
     }
@@ -99,7 +108,7 @@ class Reservation extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status === self::STATUS_IN_USE &&
+        return in_array($this->status, [self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
                now()->toDateString() > $this->end_date->toDateString();
     }
 
@@ -130,7 +139,8 @@ class Reservation extends Model
         return $query->whereIn('status', [
             self::STATUS_APPROVED,
             self::STATUS_IN_USE,
-            self::STATUS_EXTENDED
+            self::STATUS_EXTENSION_PENDING,
+            self::STATUS_EXTENDED,
         ]);
     }
 

@@ -20,6 +20,8 @@ class ValidateReservationAgainstResource
     public function handle(Resource $resource, array $reservationData, ?Reservation $currentReservation = null): void
     {
         $this->ensureResourceTypeMatches($resource, (string) $reservationData['type']);
+        $this->ensureResourceCanBeBorrowedByUser($resource, (int) ($reservationData['user_id'] ?? 0));
+        $this->ensureUserDoesNotHaveOpenReservation($resource, (int) ($reservationData['user_id'] ?? 0), $currentReservation);
         $this->ensureReservationWindowIsAllowed(
             $resource,
             (string) $reservationData['start_date'],
@@ -35,7 +37,43 @@ class ValidateReservationAgainstResource
     {
         if ($resource->type !== $type) {
             throw ValidationException::withMessages([
-                'type' => 'O tipo da reserva nao corresponde ao recurso.',
+                'type' => 'O tipo da reserva não corresponde ao recurso.',
+            ]);
+        }
+    }
+
+    private function ensureResourceCanBeBorrowedByUser(Resource $resource, int $userId): void
+    {
+        if ((int) $resource->owner_id === $userId) {
+            throw ValidationException::withMessages([
+                'resource_id' => 'Este recurso pertence a si. Não é possível solicitar empréstimo do próprio recurso.',
+            ]);
+        }
+
+        if ($resource->type === 'digital') {
+            throw ValidationException::withMessages([
+                'resource_id' => 'Recursos digitais não entram no fluxo de empréstimos físicos.',
+            ]);
+        }
+    }
+
+    private function ensureUserDoesNotHaveOpenReservation(Resource $resource, int $userId, ?Reservation $currentReservation): void
+    {
+        $query = $resource->reservations()
+            ->where('user_id', $userId)
+            ->whereNull('returned_at')
+            ->whereIn('status', [
+                Reservation::STATUS_PENDING,
+                ...Reservation::COPY_HOLDING_STATUSES,
+            ]);
+
+        if ($currentReservation !== null) {
+            $query->whereKeyNot($currentReservation->getKey());
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'resource_id' => 'Já existe uma reserva ou empréstimo ativo deste recurso para este utilizador.',
             ]);
         }
     }
@@ -72,15 +110,24 @@ class ValidateReservationAgainstResource
      */
     private function ensureResourceHasAvailability(Resource $resource, ?Reservation $currentReservation): void
     {
-        $openReservations = $resource->reservations()->whereNull('returned_at');
-
-        if ($currentReservation !== null) {
-            $openReservations->whereKeyNot($currentReservation->getKey());
+        if ($resource->type !== 'physical') {
+            return;
         }
 
-        if ($openReservations->count() >= $resource->quantity_available) {
+        $availableCopies = (int) $resource->quantity_available;
+
+        if (
+            $currentReservation !== null
+            && (int) $currentReservation->resource_id === (int) $resource->id
+            && in_array($currentReservation->status, Reservation::COPY_HOLDING_STATUSES, true)
+            && $currentReservation->returned_at === null
+        ) {
+            $availableCopies++;
+        }
+
+        if ($availableCopies <= 0) {
             throw ValidationException::withMessages([
-                'resource_id' => 'Sem disponibilidade para este recurso.',
+                'resource_id' => 'Sem cópias disponíveis.',
             ]);
         }
     }

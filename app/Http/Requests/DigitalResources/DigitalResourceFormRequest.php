@@ -27,9 +27,10 @@ abstract class DigitalResourceFormRequest extends FormRequest
         $data = $this->only([
             'title',
             'description',
-            'status',
-            'quantity_available',
         ]);
+
+        $data['status'] = $this->input('status', 'available');
+        $data['quantity_available'] = (int) $this->input('quantity_available', 0);
 
         if ($this->hasFile('cover_image')) {
             $data['cover_image'] = $this->file('cover_image')->store('resource-covers', 'public');
@@ -48,7 +49,7 @@ abstract class DigitalResourceFormRequest extends FormRequest
         $data = $this->only(['access_type', 'access_days']);
 
         if ($this->hasFile('file_path')) {
-            $data['file_path'] = $this->file('file_path')->store('digital-resources', 'public');
+            $data['file_path'] = $this->file('file_path')->store('digital-resources');
         } elseif ($this->filled('file_path')) {
             $data['file_path'] = $this->input('file_path');
         }
@@ -70,9 +71,9 @@ abstract class DigitalResourceFormRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            'status' => ['required', 'in:available,reserved,active'],
-            'quantity_available' => ['required', 'integer', 'min:1'],
             'cover_image' => ['nullable', 'image', 'max:4096'],
+            'status' => ['nullable', 'in:available,reserved,active'],
+            'quantity_available' => ['nullable', 'integer', 'min:0'],
             'file_path' => $fileRules,
             'access_type' => ['required', 'in:download,view'],
             'access_days' => ['required', 'integer', 'min:1'],

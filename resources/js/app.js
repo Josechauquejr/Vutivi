@@ -246,15 +246,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll("[data-download-action]").forEach((link) => {
         link.addEventListener("click", () => {
-            const card = link.closest("[data-resource-card]");
-            const count = card?.querySelector("[data-download-count]");
-
-            if (count) {
-                count.textContent = String(Number(count.textContent || 0) + 1);
-                count.classList.add("scale-125", "text-[#FE6807]");
-                setTimeout(() => count.classList.remove("scale-125", "text-[#FE6807]"), 260);
-            }
-
             showToast("Download iniciado.", "info");
         });
     });

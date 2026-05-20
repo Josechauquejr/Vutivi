@@ -1,5 +1,7 @@
 # Documentação Técnica Completa da Plataforma VUTIVI
 
+![Logo](./re)
+
 ## 1. Visão Geral do Sistema
 
 ### 1.1 Objetivo da Plataforma

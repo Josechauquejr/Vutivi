@@ -16,22 +16,23 @@
                 ],
             ],
             [
-                'label' => 'Meus recursos',
+                'label' => 'Meus Recursos',
                 'icon' => 'archive',
                 'open' => request()->routeIs('mine', 'resources.create', 'physical-resources.*', 'digital-resources.*'),
                 'links' => [
-                    ['label' => 'Recursos adicionados', 'route' => 'mine', 'active' => ['mine'], 'icon' => 'layers'],
+                    ['label' => 'Meus recursos', 'route' => 'mine', 'active' => ['mine'], 'icon' => 'layers'],
                     ['label' => 'Adicionar recurso', 'route' => 'resources.create', 'active' => ['resources.create', 'physical-resources.create', 'digital-resources.create'], 'icon' => 'plus-circle'],
                 ],
             ],
             [
                 'label' => 'Empréstimos',
                 'icon' => 'repeat',
-                'open' => request()->routeIs('borrowed', 'lent', 'loan-alerts', 'reservations.*'),
+                'open' => request()->routeIs('borrowed', 'lent', 'loan-alerts', 'loan-history', 'reservations.*'),
                 'links' => [
-                    ['label' => 'Empréstimos que fiz', 'route' => 'borrowed', 'active' => ['borrowed'], 'icon' => 'download'],
-                    ['label' => 'Meus recursos emprestados', 'route' => 'lent', 'active' => ['lent'], 'icon' => 'upload'],
-                    ['label' => 'Prazos próximos', 'route' => 'loan-alerts', 'active' => ['loan-alerts'], 'icon' => 'clock'],
+                    ['label' => 'Empréstimos ativos', 'route' => 'borrowed', 'active' => ['borrowed', 'reservations.show'], 'icon' => 'download'],
+                    ['label' => 'Solicitações', 'route' => 'lent', 'active' => ['lent'], 'icon' => 'upload'],
+                    ['label' => 'Histórico de empréstimos', 'route' => 'loan-history', 'active' => ['loan-history'], 'icon' => 'history'],
+                    ['label' => 'Notificações', 'route' => 'loan-alerts', 'active' => ['loan-alerts'], 'icon' => 'clock'],
                 ],
             ],
             [
@@ -39,8 +40,8 @@
                 'icon' => 'user',
                 'open' => request()->routeIs('account', 'users.*'),
                 'links' => [
-                    ['label' => 'Minha conta', 'route' => 'account', 'active' => ['account'], 'icon' => 'user'],
-                    ['label' => 'Editar perfil', 'route' => 'users.edit', 'params' => [auth()->id()], 'active' => ['users.edit'], 'icon' => 'settings'],
+                    ['label' => 'Perfil', 'route' => 'account', 'active' => ['account'], 'icon' => 'user'],
+                    ['label' => 'Configurações', 'route' => 'users.edit', 'params' => [auth()->id()], 'active' => ['users.edit'], 'icon' => 'settings'],
                 ],
             ],
         ];
@@ -59,6 +60,7 @@
                 'download' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
                 'upload' => '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
                 'clock' => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+                'history' => '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/><path d="M12 7v5l3 2"/>',
                 'settings' => '<path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .6 1.8 1.8 0 0 0-.5 1.27V21a2 2 0 1 1-4 0v-.09A1.8 1.8 0 0 0 8 19.4a1.8 1.8 0 0 0-1.98.36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.6-1 1.8 1.8 0 0 0-1.27-.5H2.6a2 2 0 1 1 0-4h.09A1.8 1.8 0 0 0 4.6 8a1.8 1.8 0 0 0-.36-1.98l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.8 1.8 0 0 0 9 4.6a1.8 1.8 0 0 0 1-.6 1.8 1.8 0 0 0 .5-1.27V2.6a2 2 0 1 1 4 0v.09A1.8 1.8 0 0 0 16 4.6a1.8 1.8 0 0 0 1.98-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.8 1.8 0 0 0 19.4 9c.4.22.73.55.95.95.2.35.3.75.3 1.15s-.1.8-.3 1.15c-.22.4-.55.73-.95.95Z"/>',
             ];
 
@@ -94,7 +96,7 @@
             @csrf
             <button type="submit" class="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-[#9f3b1f] transition hover:bg-[#fff1e6] dark:text-[#ffb07a] dark:hover:bg-[#17120f]">
                 <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
-                Terminar sessao
+                Terminar sessão
             </button>
         </form>
     </aside>
