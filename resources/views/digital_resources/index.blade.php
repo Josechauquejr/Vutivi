@@ -1,1 +1,1 @@
-@include('library', ['pageTitle' => 'Recursos digitais', 'pageEyebrow' => 'Biblioteca digital', 'resources' => $resources, 'showOwnerActions' => true])
+@include('resources.library', ['pageTitle' => 'Recursos digitais', 'pageEyebrow' => 'Biblioteca digital', 'resources' => $resources, 'showOwnerActions' => true])

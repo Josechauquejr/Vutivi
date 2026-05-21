@@ -29,7 +29,7 @@ class ResourceController extends Controller
             return redirect()->route('library');
         }
 
-        return view('index');
+        return view('pages.home');
     }
 
     /**
@@ -94,7 +94,7 @@ class ResourceController extends Controller
 
     public function about()
     {
-        return view('about');
+        return view('pages.about');
     }
 
     /**
@@ -262,7 +262,7 @@ class ResourceController extends Controller
             ->latest('updated_at')
             ->paginate(10);
 
-        return view('loan_alerts', compact('reservations'));
+        return view('resources.loan-alerts', compact('reservations'));
     }
 
     /**
@@ -283,7 +283,7 @@ class ResourceController extends Controller
                 ->count(),
         ];
 
-        return view('account', compact('user', 'stats'));
+        return view('users.account', compact('user', 'stats'));
     }
 
     /**
@@ -370,7 +370,7 @@ class ResourceController extends Controller
      */
     private function libraryView($resources, array $data)
     {
-        return view('library', [
+        return view('resources.library', [
             ...$data,
             'stats' => [
                 'total' => Resource::count(),

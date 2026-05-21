@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\PhysicalResourceController;
 use App\Http\Controllers\ResourceController;
@@ -13,7 +14,7 @@ Route::get('/', [ResourceController::class, 'index'])->name('index');
 Route::get('/library', [ResourceController::class, 'library'])->name('library');
 Route::get('/sobre', [ResourceController::class, 'about'])->name('about');
 Route::get('/apresentacao', function () {
-    return view('vutivi-apresentacao');
+    return view('pages.presentation');
 })->name('apresentacao');
 Route::get('/recurso/{resource:slug}', [ResourceController::class, 'showPublic'])->name('resources.public.show');
 Route::get('/mine', [ResourceController::class, 'mine'])->name('mine');
@@ -24,9 +25,13 @@ Route::middleware('guest')->group(function () {
     Route::controller(LoginController::class)->group(function () {
         Route::get('/login', 'create')->name('login');
         Route::post('/login', 'store')->name('login.store');
-        Route::get('/forgot-password', function () {
-            return view('users.forgot-password');
-        })->name('password.request');
+    });
+
+    Route::controller(PasswordResetController::class)->group(function () {
+        Route::get('/forgot-password', 'create')->name('password.request');
+        Route::post('/forgot-password', 'store')->name('password.email');
+        Route::get('/reset-password/{token}', 'edit')->name('password.reset');
+        Route::post('/reset-password', 'update')->name('password.update');
     });
 
     Route::controller(UserController::class)->group(function () {
