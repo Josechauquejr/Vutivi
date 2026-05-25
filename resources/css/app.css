@@ -4,26 +4,21 @@
 @source "../../node_modules/flowbite";
 
 @font-face {
-    font-family: "Sentient";
-    src: url("../font/Sentient-Regular.otf") format("truetype");
+    font-family: "Golos";
+    src: url("../font/GolosText-VariableFont_wght.ttf") format("truetype");
     font-style: normal;
-    font-display: swap;
+    font-weight: 400 900;
 }
 
 @font-face {
-    font-family: "Sentient-Bold";
-    src: url("../font/Sentient-Bold.otf") format("truetype");
-    font-weight: bold;
-}
-
-@font-face {
-    font-family: "Batica";
-    src: url("../font/BaticaSans-Regular.otf") format("truetype");
+    font-family: "Space Grotesk";
+    src: url("../font/SpaceGrotesk-VariableFont_wght.ttf") format("truetype");
     font-style: normal;
+    font-weight: 300 700;
 }
 
 * {
-    font-family: "Inter", "Batica", Arial, sans-serif;
+    font-family: "Golos", sans-serif;
     box-sizing: border-box;
 }
 
@@ -38,7 +33,7 @@ h1,
 h2,
 h3,
 .font-serif-display {
-    font-family: "Literata", "Sentient", Georgia, serif;
+    font-family: "Space Grotesk", "Golos", sans-serif;
     letter-spacing: 0;
 }
 
@@ -58,6 +53,41 @@ textarea {
         box-shadow 0.2s ease,
         transform 0.2s ease,
         opacity 0.2s ease;
+}
+
+button.is-loading {
+    position: relative;
+    pointer-events: none;
+    overflow: hidden;
+    color: transparent !important;
+}
+
+button.is-loading > * {
+    opacity: 0;
+}
+
+button.is-loading::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 1.15rem;
+    height: 1.15rem;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-top-color: rgba(255, 255, 255, 0.95);
+    border-radius: 999px;
+    animation: vutivi-spin 0.65s linear infinite;
+}
+
+a.is-loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+@keyframes vutivi-spin {
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .surface-card {
@@ -184,7 +214,12 @@ textarea {
     position: absolute;
     inset: 0;
     transform: translateX(-100%);
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.58), transparent);
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.58),
+        transparent
+    );
     animation: skeleton-sheen 1.8s ease-in-out infinite;
 }
 
@@ -238,7 +273,11 @@ body.auth-page {
     --auth-background-image: none;
     background-color: #f8f2ea;
     background-image:
-        linear-gradient(135deg, rgba(255, 250, 245, 0.86), rgba(245, 232, 218, 0.76)),
+        linear-gradient(
+            135deg,
+            rgba(255, 250, 245, 0.86),
+            rgba(245, 232, 218, 0.76)
+        ),
         var(--auth-background-image);
     background-repeat: no-repeat;
     background-position: center center;
@@ -258,8 +297,16 @@ body.auth-page::before {
     inset: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 20% 20%, rgba(254, 104, 7, 0.12), transparent 28%),
-        radial-gradient(circle at 82% 16%, rgba(43, 79, 96, 0.12), transparent 28%);
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(254, 104, 7, 0.12),
+            transparent 28%
+        ),
+        radial-gradient(
+            circle at 82% 16%,
+            rgba(43, 79, 96, 0.12),
+            transparent 28%
+        );
 }
 
 .home-layout {
@@ -287,8 +334,8 @@ body.auth-page::before {
     position: relative;
     background: rgba(255, 255, 255, 0.88);
     width: 100%;
-    max-width: 560px;
-    padding: clamp(24px, 4vw, 42px);
+    max-width: 440px;
+    padding: clamp(22px, 3.5vw, 34px);
     border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 22px;
     box-shadow: 0 28px 80px rgba(54, 39, 25, 0.16);
@@ -320,7 +367,7 @@ body.auth-page::before {
 h2 {
     margin-bottom: 20px;
     color: #333;
-    font-family: "Literata", "Sentient-Bold", Georgia, serif;
+    font-family: "Space Grotesk", "Golos", sans-serif;
     font-size: 24px;
 }
 
@@ -470,9 +517,26 @@ h2 {
     z-index: 0;
     pointer-events: none;
     background:
-        radial-gradient(circle at 16% 18%, rgba(254, 104, 7, 0.2) 0%, rgba(254, 104, 7, 0.09) 16%, transparent 34%),
-        radial-gradient(circle at var(--spotlight-x, 78%) var(--spotlight-y, 24%), rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.38) 18%, transparent 35%),
-        linear-gradient(90deg, rgba(255, 251, 246, 0.92) 0%, rgba(255, 251, 246, 0.82) 26%, rgba(255, 248, 241, 0.5) 46%, rgba(255, 255, 255, 0.08) 68%, rgba(255, 255, 255, 0) 100%);
+        radial-gradient(
+            circle at 16% 18%,
+            rgba(254, 104, 7, 0.2) 0%,
+            rgba(254, 104, 7, 0.09) 16%,
+            transparent 34%
+        ),
+        radial-gradient(
+            circle at var(--spotlight-x, 78%) var(--spotlight-y, 24%),
+            rgba(255, 255, 255, 0.92) 0%,
+            rgba(255, 255, 255, 0.38) 18%,
+            transparent 35%
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255, 251, 246, 0.92) 0%,
+            rgba(255, 251, 246, 0.82) 26%,
+            rgba(255, 248, 241, 0.5) 46%,
+            rgba(255, 255, 255, 0.08) 68%,
+            rgba(255, 255, 255, 0) 100%
+        );
 }
 
 .banner::after {
@@ -494,7 +558,11 @@ h2 {
     border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 30px;
     color: #2c1c13;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.74), rgba(255, 247, 240, 0.58));
+    background: linear-gradient(
+        135deg,
+        rgba(255, 255, 255, 0.74),
+        rgba(255, 247, 240, 0.58)
+    );
     box-shadow: 0 28px 70px rgba(248, 196, 145, 0.28);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
@@ -518,21 +586,21 @@ h2 {
 .banner__title {
     margin-bottom: 16px;
     color: #21120b;
-    font-family: "Literata", "Sentient", Georgia, serif;
+    font-family: "Space Grotesk", "Golos", sans-serif;
     font-size: clamp(40px, 7vw, 72px);
     font-weight: 700;
     line-height: 1.02;
 }
 
 .banner__title strong {
-    font-family: "Literata", "Sentient-Bold", Georgia, serif;
+    font-family: "Space Grotesk", "Golos", sans-serif;
     font-weight: 900;
 }
 
 .banner__title-accent {
     display: inline-block;
     color: #fe6807;
-    font-family: "Inter", "Batica", Arial, sans-serif;
+    font-family: "Space Grotesk", "Golos", sans-serif;
     font-weight: 400;
 }
 
@@ -691,11 +759,19 @@ h2 {
 @keyframes banner-float {
     0%,
     100% {
-        transform: translate3d(var(--parallax-x, 0px), calc(var(--parallax-y, 0px) - 4px), 0);
+        transform: translate3d(
+            var(--parallax-x, 0px),
+            calc(var(--parallax-y, 0px) - 4px),
+            0
+        );
     }
 
     50% {
-        transform: translate3d(var(--parallax-x, 0px), calc(var(--parallax-y, 0px) + 8px), 0);
+        transform: translate3d(
+            var(--parallax-x, 0px),
+            calc(var(--parallax-y, 0px) + 8px),
+            0
+        );
     }
 }
 
@@ -962,9 +1038,25 @@ h2 {
 
     .banner::before {
         background:
-            radial-gradient(circle at 16% 18%, rgba(254, 104, 7, 0.24) 0%, rgba(254, 104, 7, 0.1) 16%, transparent 34%),
-            radial-gradient(circle at var(--spotlight-x, 78%) var(--spotlight-y, 24%), rgba(254, 104, 7, 0.18) 0%, rgba(254, 104, 7, 0.08) 18%, transparent 35%),
-            linear-gradient(90deg, rgba(0, 0, 0, 0.94) 0%, rgba(0, 0, 0, 0.86) 30%, rgba(0, 0, 0, 0.54) 58%, rgba(0, 0, 0, 0.2) 100%);
+            radial-gradient(
+                circle at 16% 18%,
+                rgba(254, 104, 7, 0.24) 0%,
+                rgba(254, 104, 7, 0.1) 16%,
+                transparent 34%
+            ),
+            radial-gradient(
+                circle at var(--spotlight-x, 78%) var(--spotlight-y, 24%),
+                rgba(254, 104, 7, 0.18) 0%,
+                rgba(254, 104, 7, 0.08) 18%,
+                transparent 35%
+            ),
+            linear-gradient(
+                90deg,
+                rgba(0, 0, 0, 0.94) 0%,
+                rgba(0, 0, 0, 0.86) 30%,
+                rgba(0, 0, 0, 0.54) 58%,
+                rgba(0, 0, 0, 0.2) 100%
+            );
     }
 
     .banner::after {
@@ -974,7 +1066,11 @@ h2 {
     .banner__content {
         border-color: rgba(254, 104, 7, 0.2);
         color: #ffffff;
-        background: linear-gradient(135deg, rgba(0, 0, 0, 0.82), rgba(18, 13, 10, 0.72));
+        background: linear-gradient(
+            135deg,
+            rgba(0, 0, 0, 0.82),
+            rgba(18, 13, 10, 0.72)
+        );
         box-shadow: 0 28px 70px rgba(0, 0, 0, 0.46);
     }
 

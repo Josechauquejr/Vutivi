@@ -64,13 +64,16 @@
             'resource_kind_label' => $isDigital ? 'Digital' : 'Físico',
             'meta' => $meta,
             'description' => $resource->description,
+            'authors' => $resource->authors,
             'owner' => $resource->owner?->name ?? 'Não definido',
             'cover_class' => $coverClasses[$index % count($coverClasses)],
             'cover_image' => $resource->cover_image,
             'cover_title' => wordwrap(strtoupper(collect($titleWords)->take(3)->implode(' ')), 12, "\n", true),
-            'cover_author' => strtoupper($resource->owner?->name ?? 'VUTIVI'),
+            'cover_author' => strtoupper($resource->authors ?: ($resource->owner?->name ?? 'VUTIVI')),
             'tag' => $isDigital ? $fileType : 'Livro',
             'status' => $statusLabels[$resource->status] ?? ucfirst($resource->status),
+            'moderation_status' => $resource->moderation_status,
+            'moderation_reason' => $resource->moderation_reason,
             'available_count' => $isDigital ? null : (int) $resource->quantity_available,
             'can_manage' => auth()->check() && (int) $resource->owner_id === (int) auth()->id(),
             'is_favorited' => (bool) ($resource->is_favorited ?? false),
@@ -121,8 +124,9 @@
                 </div>
 
                 <form action="{{ url()->current() }}" method="GET"
-                    class="mt-6 grid gap-3 lg:grid-cols-[minmax(260px,1.6fr)_repeat(5,minmax(130px,1fr))_auto]">
-                    <label class="lg:col-span-2">
+                    data-instant-filter-form data-suggestions-url="{{ route('library.suggestions') }}"
+                    class="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-[minmax(260px,1.6fr)_repeat(5,minmax(130px,1fr))_auto]">
+                    <label class="relative md:col-span-2 lg:col-span-2">
                         <span
                             class="mb-1 block text-xs font-semibold uppercase tracking-[0.18em] text-[#7f6652] dark:text-[#cfc5ba]">Pesquisar</span>
                         <div class="field-shell">
@@ -134,6 +138,7 @@
                                 placeholder="Titulo, autor, tag ou descricao"
                                 class="premium-input text-sm placeholder:text-[#9f8c7b] dark:placeholder:text-[#80756b]">
                         </div>
+                        <div data-search-suggestions class="invisible absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-[#eadfce] bg-white opacity-0 shadow-[0_18px_48px_rgba(54,39,25,0.16)] transition dark:border-[#2b211b] dark:bg-[#0b0908]"></div>
                     </label>
 
                     <label>
@@ -196,14 +201,6 @@
                     </label>
 
                     <div class="flex items-end gap-2">
-                        <button
-                            class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-[#FE6807] px-4 text-sm font-semibold text-white transition hover:bg-[#e15f07]">
-                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="11" cy="11" r="8" />
-                                <path d="m21 21-4.3-4.3" />
-                            </svg>
-                            Filtrar
-                        </button>
                         <a href="{{ url()->current() }}"
                             class="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#decbb8] px-3 text-sm font-semibold text-[#5f4632] dark:border-[#332820] dark:text-[#d8cec3]">Limpar</a>
                     </div>
@@ -216,7 +213,7 @@
                     Nenhum recurso encontrado com estes filtros.
                 </div>
             @else
-                <div class="mt-5 grid items-start gap-4 lg:grid-cols-2 xl:gap-5">
+                <div class="mt-5 grid items-start gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:gap-5">
                     @foreach ($resourceCards as $resource)
                         <x-resources.resource-card :resource="$resource" />
                     @endforeach
@@ -255,7 +252,6 @@
         </section>
     </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
 </body>
 
 </html>
