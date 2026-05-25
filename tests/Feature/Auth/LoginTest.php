@@ -51,4 +51,27 @@ class LoginTest extends TestCase
 
         $this->assertGuest();
     }
+
+    public function test_admin_is_redirected_to_moderation_and_blocked_from_library(): void
+    {
+        $admin = User::factory()->create([
+            'username' => 'admin.vutivi',
+            'email' => 'admin@vutivi.com',
+            'password' => 'vutivi123',
+            'role' => 'admin',
+        ]);
+
+        $this->post('/login', [
+            'username' => 'admin.vutivi',
+            'password' => 'vutivi123',
+        ])->assertRedirect(route('moderation.index'));
+
+        $this->assertAuthenticatedAs($admin);
+
+        $this->get('/library')->assertRedirect(route('moderation.index'));
+
+        $this->post('/logout')->assertRedirect('/');
+
+        $this->assertGuest();
+    }
 }

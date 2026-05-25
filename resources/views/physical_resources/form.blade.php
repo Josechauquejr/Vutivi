@@ -37,6 +37,15 @@
 </div>
 
 <label>
+    <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Autores</span>
+    <span class="field-shell block">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <input name="authors" value="{{ old('authors', $resource?->authors) }}" placeholder="Ex: Eduardo Mondlane; Jose Craveirinha" class="premium-input">
+    </span>
+    <span class="helper-text">Separe multiplos autores por ponto e virgula.</span>
+</label>
+
+<label>
     <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Descricao</span>
     <textarea name="description" rows="5" class="w-full rounded-xl border border-[#decbb8] bg-[#fffaf5] px-4 py-3 text-sm outline-none focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">{{ old('description', $resource?->description) }}</textarea>
     <span class="helper-text">Inclua resumo, area de estudo, autor ou observacoes importantes.</span>

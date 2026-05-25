@@ -329,7 +329,7 @@ class ReservationController extends Controller
         abort_unless($reservation->status === Reservation::STATUS_EXTENSION_PENDING, 422);
 
         $reservation->update([
-            'status' => Reservation::STATUS_IN_USE,
+            'status' => $reservation->picked_up_at ? Reservation::STATUS_IN_USE : Reservation::STATUS_APPROVED,
             'extension_decision' => Reservation::EXTENSION_DENIED,
             'extension_decided_at' => now(),
             'extension_decision_note' => $request->input('extension_decision_note'),

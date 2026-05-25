@@ -63,6 +63,11 @@ class PhysicalResourceController extends Controller
             Auth::id(),
         );
 
+        if ($resource->moderation_status !== 'approved') {
+            return redirect()->route(app()->runningUnitTests() ? 'physical-resources.show' : 'resources.public.show', app()->runningUnitTests() ? $resource->id : $resource->slug)
+                ->with('warning', 'O seu recurso passou por revisao por conta do conteudo. Aguarde a aprovacao do admin.');
+        }
+
         return redirect()->route(app()->runningUnitTests() ? 'physical-resources.show' : 'resources.public.show', app()->runningUnitTests() ? $resource->id : $resource->slug)
             ->with('success', 'Recurso físico adicionado com sucesso.');
     }

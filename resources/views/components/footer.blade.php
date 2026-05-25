@@ -35,6 +35,6 @@
     </div>
     <div class="mx-auto mt-10 flex max-w-7xl flex-col gap-3 border-t border-[#f3e4d8] pt-6 text-xs font-semibold text-[#806856] dark:border-[#241915] dark:text-[#bcae9f] sm:flex-row sm:items-center sm:justify-between">
         <p>&copy; {{ date('Y') }} Vutivi Library. Todos os direitos reservados.</p>
-        <p>Conhecimento, leitura e tecnologia moderna.</p>
+        <p>Construído por <span class="text-[#FE6807]">Jose Chauque Jr</span> &amp; <span class="text-[#FE6807]">Bonifácio Simbine</span></p>
     </div>
 </footer>

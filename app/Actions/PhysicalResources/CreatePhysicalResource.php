@@ -3,6 +3,7 @@
 namespace App\Actions\PhysicalResources;
 
 use App\Models\Resource;
+use App\Services\Moderation\ModerationScorer;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\DB;
  */
 class CreatePhysicalResource
 {
+    public function __construct(private ModerationScorer $moderationScorer)
+    {
+    }
+
     /**
      * Cria o recurso base e o registro especifico do subtipo fisico.
      *
@@ -38,7 +43,27 @@ class CreatePhysicalResource
         return [
             ...$resourceData,
             'type' => 'physical',
+            ...$this->moderationPayload($resourceData),
             'owner_id' => $ownerId,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $resourceData
+     * @return array<string, mixed>
+     */
+    private function moderationPayload(array $resourceData): array
+    {
+        $analysis = $this->moderationScorer->analyze(
+            (string) ($resourceData['title'] ?? ''),
+            $resourceData['description'] ?? null,
+        );
+
+        return [
+            'moderation_status' => $analysis['status'],
+            'moderation_score' => $analysis['score'],
+            'moderation_reason' => $analysis['reason'],
+            'moderation_auto' => true,
         ];
     }
 }

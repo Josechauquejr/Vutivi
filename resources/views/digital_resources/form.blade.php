@@ -26,7 +26,7 @@
     </div>
 </div>
 
-<div class="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+<div class="grid gap-5">
     <label>
         <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Título</span>
         <span class="field-shell block">
@@ -35,18 +35,20 @@
         </span>
     </label>
 
-    <label>
-        <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Limite de acesso</span>
-        <span class="field-shell block">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            <input type="number" name="access_days" min="1" inputmode="numeric" value="{{ old('access_days', $digital?->access_days ?? 30) }}" required class="premium-input">
-        </span>
-    </label>
+    <input type="hidden" name="access_days" value="{{ old('access_days', $digital?->access_days ?? 30) }}">
 </div>
 
 <label>
     <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Descrição</span>
     <textarea name="description" rows="5" class="w-full rounded-xl border border-[#decbb8] bg-[#fffaf5] px-4 py-3 text-sm outline-none focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">{{ old('description', $resource?->description) }}</textarea>
+</label>
+
+<label>
+    <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Autores</span>
+    <span class="field-shell block">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <input name="authors" value="{{ old('authors', $resource?->authors) }}" placeholder="Ex: Mia Couto; Paulina Chiziane" class="premium-input">
+    </span>
 </label>
 
 <div class="grid gap-5 sm:grid-cols-[0.9fr_1.1fr]">

@@ -1,6 +1,7 @@
 @php
     use App\Models\Resource;
     use App\Models\Reservation;
+    use App\Models\ModerationNotification;
     use Illuminate\Support\Facades\Schema;
 
     $baseLinkClass = 'flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[#4d382b] transition hover:bg-[#fff4ec] hover:text-[#FE6807] dark:text-[#e9ddd2] dark:hover:bg-[#17120f] dark:hover:text-[#ffad77]';
@@ -113,9 +114,46 @@
                 'icon' => 'heart',
             ]);
         }
+
+        $moderationUpdates = Resource::where('owner_id', $user->id)
+            ->whereIn('moderation_status', ['review'])
+            ->latest('updated_at')
+            ->limit(2)
+            ->get();
+
+        foreach ($moderationUpdates as $resource) {
+            $rejected = $resource->moderation_status === 'rejected';
+
+            $notifications->push([
+                'title' => $rejected ? 'Recurso recusado' : 'Recurso em analise',
+                'body' => $rejected
+                    ? (($resource->moderation_reason ?: 'A moderacao recusou este recurso.') . ' - ' . $resource->title)
+                    : ('O recurso ' . $resource->title . ' passou por revisao por conta do conteudo. Aguarde a aprovacao do admin.'),
+                'route' => route('mine', ['q' => $resource->title]),
+                'icon' => $rejected ? 'x-circle' : 'clock',
+            ]);
+        }
+
+        if (Schema::hasTable('moderation_notifications')) {
+            $resourceDecisions = ModerationNotification::where('user_id', $user->id)
+                ->latest()
+                ->limit(3)
+                ->get();
+
+            foreach ($resourceDecisions as $notice) {
+                $approved = $notice->status === 'approved';
+
+                $notifications->push([
+                    'title' => $approved ? 'Recurso aprovado' : 'Recurso rejeitado',
+                    'body' => $notice->message,
+                    'route' => route('mine'),
+                    'icon' => $approved ? 'check-circle' : 'x-circle',
+                ]);
+            }
+        }
     }
 
-    $newResources = $hasResourceTables ? Resource::latest()->limit($user ? 1 : 2)->get() : collect();
+    $newResources = $hasResourceTables ? Resource::where('moderation_status', 'approved')->latest()->limit($user ? 1 : 2)->get() : collect();
     foreach ($newResources as $resource) {
         $notifications->push([
             'title' => 'Novo recurso na biblioteca',
@@ -140,7 +178,7 @@
                 </picture>
             </a>
 
-            <form action="{{ route('library') }}" method="GET" class="navbar-search relative hidden w-full max-w-2xl justify-self-center md:block">
+            <form action="{{ route('library') }}" method="GET" class="navbar-search relative hidden w-full max-w-2xl justify-self-center md:block" hidden>
                 <label for="navbar-search" class="sr-only">Pesquisar recursos</label>
                 <div class="relative">
                     <svg class="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9f6a47]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -246,7 +284,7 @@
 
             <div class="col-span-3 hidden w-full lg:hidden" id="navbar-sticky">
                 <div class="mt-3 rounded-2xl border border-[#eee1d6] bg-white p-3 shadow-[0_18px_34px_rgba(88,44,14,0.10)] dark:border-[#241915] dark:bg-[#090807]">
-                    <form action="{{ route('library') }}" method="GET" class="mb-3 md:hidden">
+                    <form action="{{ route('library') }}" method="GET" class="mb-3 md:hidden" hidden>
                         <div class="field-shell">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                             <input type="search" name="q" value="{{ request('q') }}" placeholder="Pesquisar recursos" class="premium-input">

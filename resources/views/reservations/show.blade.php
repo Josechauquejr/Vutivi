@@ -52,7 +52,6 @@
                 ['Data de entrega', optional($reservation->picked_up_at ?? $reservation->start_date)->format('d/m/Y') ?? 'Não definido'],
                 ['Devolução prevista', optional($reservation->end_date)->format('d/m/Y') ?? 'Não definido'],
                 ['Dias restantes', $reservation->returned_at ? 'Devolvido' : ($daysRemaining >= 0 ? $daysRemaining . ' dias' : abs($daysRemaining) . ' dias em atraso')],
-                ['Cópias disponíveis', $resource?->type === 'digital' ? 'Acesso digital' : (int) ($resource?->quantity_available ?? 0)],
                 ['Dono do recurso', $resource?->owner?->name ?? 'Não definido'],
                 ['Extensão solicitada', $reservation->extension_reason ?: 'Nenhuma solicitação'],
             ];

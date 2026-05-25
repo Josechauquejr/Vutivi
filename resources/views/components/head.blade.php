@@ -6,11 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <meta name="color-scheme" content="light dark" />
     <title>{{ $title }}</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Literata:wght@500;600;700&display=swap"
-        rel="stylesheet" />
     <link rel="icon" href="{{ asset('img/png/vuticon_orangeBck@4x.png') }}" type="image/png" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://cdn.jsdelivr.net/npm/flowbite@4.0.1/dist/flowbite.min.js"></script>
 
     {{ $slot }}
 </head>

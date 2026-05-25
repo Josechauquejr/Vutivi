@@ -9,16 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('reservations', function (Blueprint $table) {
-            $table->timestamp('extension_requested_at')
-                ->nullable()
-                ->after('extended_due_date');
+            if (! Schema::hasColumn('reservations', 'extension_requested_at')) {
+                $table->timestamp('extension_requested_at')->nullable();
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('reservations', function (Blueprint $table) {
-            $table->dropColumn('extension_requested_at');
+            if (Schema::hasColumn('reservations', 'extension_requested_at')) {
+                $table->dropColumn('extension_requested_at');
+            }
         });
     }
 };

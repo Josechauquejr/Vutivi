@@ -56,6 +56,21 @@ class LoginController extends Controller
         // Regeneramos a sessao apenas apos o login bem-sucedido para reduzir risco de fixacao de sessao.
         $request->session()->regenerate();
 
+        $user = $request->user();
+
+        if ($user?->isBanned()) {
+            $message = $user->ban_reason ?: 'A sua conta foi suspensa pela equipa de moderação.';
+            $this->logoutUser->handle($request);
+
+            return back()
+                ->withInput($request->only('username'))
+                ->with('error', $message);
+        }
+
+        if ($user?->isAdmin()) {
+            return redirect()->route('moderation.index');
+        }
+
         return redirect()->intended('/home');
     }
 

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Resources;
 
+use App\Models\BlacklistWord;
 use App\Models\Resource;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -88,5 +89,40 @@ class PhysicalResourceCrudTest extends TestCase
         $this->assertDatabaseMissing('resources', [
             'id' => $resource->id,
         ]);
+    }
+
+    public function test_physical_resource_with_dangerous_word_is_scored_and_notified(): void
+    {
+        $owner = User::factory()->create([
+            'username' => 'owner.danger.word',
+            'email' => 'owner.danger.word@example.com',
+        ]);
+
+        BlacklistWord::create([
+            'word' => 'restrito',
+            'category' => 'Conteudo proibido',
+            'severity' => 'critical',
+            'created_by' => $owner->id,
+        ]);
+
+        $this->actingAs($owner);
+
+        $this->post(route('physical-resources.store'), [
+            'title' => 'Atlas restrito',
+            'description' => 'Colecao fisica para revisao',
+            'status' => 'available',
+            'quantity_available' => 1,
+            'location' => 'Estante Central',
+            'max_loan_days' => 10,
+            'condition' => 'good',
+        ])
+            ->assertRedirect()
+            ->assertSessionHas('warning', 'O seu recurso passou por revisao por conta do conteudo. Aguarde a aprovacao do admin.');
+
+        $resource = Resource::where('title', 'Atlas restrito')->firstOrFail();
+
+        $this->assertNotSame('approved', $resource->moderation_status);
+        $this->assertGreaterThan(30, $resource->moderation_score);
+        $this->assertTrue((bool) $resource->moderation_auto);
     }
 }

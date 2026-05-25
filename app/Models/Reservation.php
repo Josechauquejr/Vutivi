@@ -106,7 +106,7 @@ class Reservation extends Model
      */
     public function canExtend(): bool
     {
-        return in_array($this->status, [self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
+        return in_array($this->status, [self::STATUS_APPROVED, self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
                $this->resource?->physicalResource &&
                $this->extension_count < $this->resource->physicalResource->max_extensions &&
                $this->resource->physicalResource->allow_extension;

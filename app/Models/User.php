@@ -10,10 +10,22 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-#[Fillable(['name', 'username', 'slug', 'email', 'profile_photo', 'password'])]
+#[Fillable(['name', 'username', 'slug', 'email', 'profile_photo', 'password', 'role', 'banned_at', 'ban_reason'])]
 #[Hidden(['password'])]
 /**
  * Um usuario pode tanto possuir recursos quanto reserva-los, por isso o modelo representa dois papeis no dominio.
+ *
+ * @property int $id
+ * @property string $name
+ * @property string|null $username
+ * @property string $email
+ * @property string|null $profile_photo
+ * @property string|null $role
+ * @property \Illuminate\Support\Carbon|null $banned_at
+ * @property string|null $ban_reason
+ * @property int|null $resources_count
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  */
 class User extends Authenticatable
 {
@@ -57,7 +69,18 @@ class User extends Authenticatable
         return [
             // O hash no limite do modelo protege qualquer caminho de escrita, nao apenas formularios.
             'password' => 'hashed',
+            'banned_at' => 'datetime',
         ];
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'superadmin'], true);
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->banned_at !== null;
     }
 
     /**
@@ -82,5 +105,10 @@ class User extends Authenticatable
     public function favoriteResources()
     {
         return $this->belongsToMany(Resource::class, 'resource_user_favorites')->withTimestamps();
+    }
+
+    public function moderationNotifications()
+    {
+        return $this->hasMany(ModerationNotification::class);
     }
 }

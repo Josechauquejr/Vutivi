@@ -7,39 +7,41 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-{
-    Schema::table('reservations', function (Blueprint $table) {
+    {
+        Schema::table('reservations', function (Blueprint $table) {
+            if (! Schema::hasColumn('reservations', 'extension_decision')) {
+                $table->string('extension_decision')->nullable();
+            }
 
-        // Já existente:
-        // extension_requested_at
+            if (! Schema::hasColumn('reservations', 'extension_decided_at')) {
+                $table->timestamp('extension_decided_at')->nullable();
+            }
 
-        // Novas colunas
+            if (! Schema::hasColumn('reservations', 'extension_reviewed_by')) {
+                $table->foreignId('extension_reviewed_by')
+                    ->nullable()
+                    ->constrained('users')
+                    ->nullOnDelete();
+            }
 
-        $table->string('extension_decision')->nullable();
-        // approved | rejected
+            if (! Schema::hasColumn('reservations', 'extended_due_date')) {
+                $table->date('extended_due_date')->nullable();
+            }
+        });
+    }
 
-        $table->timestamp('extension_decided_at')->nullable();
+    public function down(): void
+    {
+        Schema::table('reservations', function (Blueprint $table) {
+            if (Schema::hasColumn('reservations', 'extension_reviewed_by')) {
+                $table->dropConstrainedForeignId('extension_reviewed_by');
+            }
 
-        $table->foreignId('extension_reviewed_by')
-            ->nullable()
-            ->constrained('users')
-            ->nullOnDelete();
-
-        $table->date('extended_due_date')->nullable();
-    });
-}
-
-   public function down(): void
-{
-    Schema::table('reservations', function (Blueprint $table) {
-
-        $table->dropConstrainedForeignId('extension_reviewed_by');
-
-        $table->dropColumn([
-            'extension_decision',
-            'extension_decided_at',
-            'extended_due_date',
-        ]);
-    });
-}
+            foreach (['extension_decision', 'extension_decided_at', 'extended_due_date'] as $column) {
+                if (Schema::hasColumn('reservations', $column)) {
+                    $table->dropColumn($column);
+                }
+            }
+        });
+    }
 };

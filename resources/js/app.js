@@ -103,6 +103,22 @@ const bindBannerParallax = (banner) => {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("form").forEach((form) => {
+        form.addEventListener("submit", () => {
+            const button = form.querySelector('button[type="submit"], button:not([type])');
+            button?.classList.add("is-loading");
+            if (button) button.setAttribute("aria-busy", "true");
+        });
+    });
+
+    document.querySelectorAll("a[href]:not([target])").forEach((link) => {
+        link.addEventListener("click", () => {
+            const href = link.getAttribute("href") || "";
+            if (href.startsWith("#") || href.startsWith("javascript:")) return;
+            link.classList.add("is-loading");
+        });
+    });
+
     document.querySelectorAll("[data-banner-parallax]").forEach(bindBannerParallax);
 
     document.querySelectorAll(".navbar-search").forEach((search) => {
@@ -128,6 +144,117 @@ document.addEventListener("DOMContentLoaded", () => {
         document.addEventListener("pointerdown", (event) => {
             if (!search.contains(event.target)) {
                 close();
+            }
+        });
+    });
+
+    document.querySelectorAll("[data-instant-filter-form]").forEach((form) => {
+        const input = form.querySelector("[data-smart-search]");
+        const panel = form.querySelector("[data-search-suggestions]");
+        const suggestionsUrl = form.dataset.suggestionsUrl;
+        let debounceId = 0;
+        let controller = null;
+
+        const escapeHtml = (value) => String(value ?? "").replace(/[&<>"']/g, (char) => ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#039;",
+        })[char]);
+
+        const formUrl = () => {
+            const params = new URLSearchParams(new FormData(form));
+            params.delete("page");
+
+            [...params.entries()].forEach(([key, value]) => {
+                if (value === "") {
+                    params.delete(key);
+                }
+            });
+
+            return `${form.action}?${params.toString()}`;
+        };
+
+        const openPanel = () => {
+            panel?.classList.remove("invisible", "opacity-0");
+            panel?.classList.add("opacity-100");
+        };
+
+        const closePanel = () => {
+            panel?.classList.add("invisible", "opacity-0");
+            panel?.classList.remove("opacity-100");
+        };
+
+        const renderSuggestions = (items) => {
+            if (!panel) return;
+
+            if (!items.length) {
+                panel.innerHTML = '<div class="px-4 py-3 text-sm font-semibold text-[#7f6652] dark:text-[#cfc5ba]">Nenhum recurso encontrado.</div>';
+                openPanel();
+                return;
+            }
+
+            panel.innerHTML = items.map((item) => `
+                <button type="button" data-suggestion-url="${escapeHtml(item.url)}" class="block w-full border-b border-[#f3e4d8] px-4 py-3 text-left last:border-b-0 hover:bg-[#fff7f0] dark:border-[#241915] dark:hover:bg-[#15110e]">
+                    <span class="block text-sm font-black text-[#241b14] dark:text-white">${escapeHtml(item.title)}</span>
+                    <span class="mt-1 block text-xs font-semibold uppercase tracking-[0.16em] text-[#FE6807]">${item.type === "digital" ? "Digital" : "Fisico"}${item.authors ? ` - ${escapeHtml(item.authors)}` : ""}</span>
+                    ${item.description ? `<span class="mt-1 block text-xs leading-5 text-[#7a5c4a] dark:text-[#d5c7be]">${escapeHtml(item.description)}</span>` : ""}
+                </button>
+            `).join("");
+            openPanel();
+        };
+
+        form.querySelectorAll("select").forEach((select) => {
+            select.addEventListener("change", () => {
+                window.location.assign(formUrl());
+            });
+        });
+
+        panel?.addEventListener("click", (event) => {
+            const option = event.target.closest("[data-suggestion-url]");
+
+            if (option) {
+                window.location.assign(option.dataset.suggestionUrl);
+            }
+        });
+
+        input?.addEventListener("input", () => {
+            const query = input.value.trim();
+            clearTimeout(debounceId);
+
+            if (query.length < 2 || !suggestionsUrl) {
+                closePanel();
+                return;
+            }
+
+            debounceId = setTimeout(async () => {
+                controller?.abort();
+                controller = new AbortController();
+
+                try {
+                    const params = new URLSearchParams(new FormData(form));
+                    params.delete("page");
+                    params.set("q", query);
+
+                    const response = await fetch(`${suggestionsUrl}?${params.toString()}`, {
+                        headers: { Accept: "application/json" },
+                        signal: controller.signal,
+                    });
+
+                    if (!response.ok) throw new Error("suggestions failed");
+                    renderSuggestions(await response.json());
+                } catch (error) {
+                    if (error.name !== "AbortError") {
+                        closePanel();
+                    }
+                }
+            }, 160);
+        });
+
+        document.addEventListener("pointerdown", (event) => {
+            if (!form.contains(event.target)) {
+                closePanel();
             }
         });
     });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Resource;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -29,7 +30,26 @@ class ResourceController extends Controller
             return redirect()->route('library');
         }
 
-        return view('pages.home');
+        $stats = [
+            'total'       => Resource::count(),
+            'digital'     => Resource::where('type', 'digital')->count(),
+            'physical'    => Resource::where('type', 'physical')->count(),
+            'activeLoans' => Reservation::whereNull('returned_at')->whereIn('status', Reservation::COPY_HOLDING_STATUSES)->count(),
+        ];
+
+        $popularResources = Resource::with(['owner', 'digitalResource', 'physicalResource'])
+            ->withCount(['favoritedBy as favorites_count'])
+            ->when(
+                Schema::hasColumn('resources', 'moderation_status'),
+                fn ($q) => $q->where('moderation_status', 'approved')
+            )
+            ->where('status', 'available')
+            ->orderByDesc('favorites_count')
+            ->orderByDesc('downloads_count')
+            ->limit(3)
+            ->get();
+
+        return view('pages.home', compact('stats', 'popularResources'));
     }
 
     /**
@@ -53,6 +73,8 @@ class ResourceController extends Controller
 
     public function showPublic(Resource $resource)
     {
+        abort_unless($this->canOpenResource($resource), 404);
+
         $resource->load(['owner', 'physicalResource', 'digitalResource', 'reservations.user']);
 
         return view('resources.show', compact('resource'));
@@ -63,6 +85,7 @@ class ResourceController extends Controller
         $resource->load('digitalResource');
 
         abort_unless($resource->type === 'digital' && $resource->digitalResource?->file_path, 404);
+        abort_unless($this->canOpenResource($resource), 404);
         abort_unless($resource->digitalResource->access_type === 'view', 403);
 
         $path = $resource->digitalResource->file_path;
@@ -81,6 +104,7 @@ class ResourceController extends Controller
         $resource->load('digitalResource');
 
         abort_unless($resource->type === 'digital' && $resource->digitalResource?->file_path, 404);
+        abort_unless($this->canOpenResource($resource), 404);
         abort_unless($resource->digitalResource->access_type === 'download', 403);
 
         $path = $resource->digitalResource->file_path;
@@ -98,7 +122,7 @@ class ResourceController extends Controller
     }
 
     /**
-     * Exibe a página biblioteca com recursos fictícios.
+     * Exibe a pagina biblioteca com recursos reais cadastrados.
      */
     public function library(Request $request)
     {
@@ -114,6 +138,26 @@ class ResourceController extends Controller
         ]);
     }
 
+    public function suggestions(Request $request)
+    {
+        $search = trim((string) $request->query('q', ''));
+
+        if (mb_strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        return $this->resourceQuery($request)
+            ->limit(8)
+            ->get()
+            ->map(fn (Resource $resource) => [
+                'title' => $resource->title,
+                'authors' => $resource->authors,
+                'type' => $resource->type,
+                'description' => str($resource->description ?? '')->limit(92)->toString(),
+                'url' => $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id),
+            ]);
+    }
+
     /**
      * Exibe a página Meus recursos com recursos do usuário.
      */
@@ -123,7 +167,7 @@ class ResourceController extends Controller
             return redirect()->route('login');
         }
 
-        $resources = $this->applySort($this->resourceQuery($request)
+        $resources = $this->applySort($this->resourceQuery($request, includeUnavailableModeration: true)
             ->where('owner_id', auth()->id())
             , $request)
             ->paginate($this->perPage($request))
@@ -308,7 +352,7 @@ class ResourceController extends Controller
     /**
      * Monta a consulta base do catalogo com pesquisa opcional.
      */
-    private function resourceQuery(Request $request)
+    private function resourceQuery(Request $request, bool $includeUnavailableModeration = false)
     {
         $search = trim((string) $request->query('q', ''));
         $type = $request->query('type');
@@ -323,6 +367,7 @@ class ResourceController extends Controller
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
+                        ->orWhere('authors', 'like', "%{$search}%")
                         ->orWhere('description', 'like', "%{$search}%")
                         ->orWhereHas('owner', function ($query) use ($search) {
                             $query->where('name', 'like', "%{$search}%");
@@ -339,7 +384,21 @@ class ResourceController extends Controller
 
                 $query->whereHas('digitalResource', fn ($query) => $query->where('file_path', 'like', "%.{$format}"));
             })
+            ->when(
+                ! $includeUnavailableModeration && Schema::hasColumn('resources', 'moderation_status'),
+                fn ($query) => $query->where('moderation_status', 'approved')
+            )
             ->withExists(['favoritedBy as is_favorited' => fn ($query) => $query->where('users.id', auth()->id() ?? 0)]);
+    }
+
+    private function canOpenResource(Resource $resource): bool
+    {
+        if (! Schema::hasColumn('resources', 'moderation_status')) {
+            return true;
+        }
+
+        return $resource->moderation_status === 'approved'
+            || (auth()->check() && (int) $resource->owner_id === (int) auth()->id());
     }
 
     /**
@@ -360,9 +419,9 @@ class ResourceController extends Controller
      */
     private function perPage(Request $request): int
     {
-        return in_array((int) $request->query('per_page', 20), [20, 40, 60], true)
-            ? (int) $request->query('per_page', 20)
-            : 20;
+        return in_array((int) $request->query('per_page', 12), [10, 12, 16, 20, 40, 60], true)
+            ? (int) $request->query('per_page', 12)
+            : 12;
     }
 
     /**

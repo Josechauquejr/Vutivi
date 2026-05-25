@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Resources;
 
+use App\Models\BlacklistHash;
 use App\Models\Resource;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -89,5 +90,39 @@ class DigitalResourceCrudTest extends TestCase
         $this->assertDatabaseMissing('resources', [
             'id' => $resource->id,
         ]);
+    }
+
+    public function test_digital_resource_with_rejected_hash_is_scored_and_notified(): void
+    {
+        $owner = User::factory()->create([
+            'username' => 'owner.rejected.hash',
+            'email' => 'owner.rejected.hash@example.com',
+        ]);
+
+        BlacklistHash::create([
+            'hash' => 'docs/malware.pdf',
+            'reason' => 'Hash recusado anteriormente.',
+            'created_by' => $owner->id,
+        ]);
+
+        $this->actingAs($owner);
+
+        $this->post(route('digital-resources.store'), [
+            'title' => 'Manual suspeito',
+            'description' => 'Documento digital',
+            'status' => 'available',
+            'quantity_available' => 1,
+            'file_path' => 'docs/malware.pdf',
+            'access_type' => 'view',
+            'access_days' => 30,
+        ])
+            ->assertRedirect()
+            ->assertSessionHas('warning', 'O seu recurso passou por revisao por conta do conteudo. Aguarde a aprovacao do admin.');
+
+        $resource = Resource::where('title', 'Manual suspeito')->firstOrFail();
+
+        $this->assertSame('rejected', $resource->moderation_status);
+        $this->assertGreaterThanOrEqual(80, $resource->moderation_score);
+        $this->assertTrue((bool) $resource->moderation_auto);
     }
 }

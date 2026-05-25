@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\DigitalResources;
 
+use App\Models\DigitalResource;
+use App\Models\Resource;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -26,6 +28,7 @@ abstract class DigitalResourceFormRequest extends FormRequest
     {
         $data = $this->only([
             'title',
+            'authors',
             'description',
         ]);
 
@@ -46,10 +49,12 @@ abstract class DigitalResourceFormRequest extends FormRequest
      */
     public function digitalResourceData(): array
     {
-        $data = $this->only(['access_type', 'access_days']);
+        $data = $this->only(['access_type']);
+        $data['access_days'] = (int) $this->input('access_days', 30);
 
         if ($this->hasFile('file_path')) {
             $data['file_path'] = $this->file('file_path')->store('digital-resources');
+            $data['file_hash'] = $this->uploadedFileHash();
         } elseif ($this->filled('file_path')) {
             $data['file_path'] = $this->input('file_path');
         }
@@ -70,13 +75,14 @@ abstract class DigitalResourceFormRequest extends FormRequest
 
         return [
             'title' => ['required', 'string', 'max:255'],
+            'authors' => ['nullable', 'string', 'max:1000'],
             'description' => ['nullable', 'string'],
             'cover_image' => ['nullable', 'image', 'max:4096'],
             'status' => ['nullable', 'in:available,reserved,active'],
             'quantity_available' => ['nullable', 'integer', 'min:0'],
             'file_path' => $fileRules,
             'access_type' => ['required', 'in:download,view'],
-            'access_days' => ['required', 'integer', 'min:1'],
+            'access_days' => ['nullable', 'integer', 'min:1'],
         ];
     }
 
@@ -87,8 +93,41 @@ abstract class DigitalResourceFormRequest extends FormRequest
     {
         $this->merge([
             'title' => trim((string) $this->input('title')),
+            'authors' => $this->normalizeNullableText('authors'),
             'description' => $this->normalizeNullableText('description'),
         ]);
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $resourceId = $this->currentResourceId();
+            $normalizedTitle = Resource::normalizeTitle((string) $this->input('title'));
+
+            if ($normalizedTitle !== '' && Resource::where('title_normalized', $normalizedTitle)
+                ->when($resourceId, fn ($query) => $query->whereKeyNot($resourceId))
+                ->exists()) {
+                $validator->errors()->add('title', 'Ja existe um recurso com este titulo.');
+            }
+
+            if ($this->hasFile('file_path')) {
+                $hash = $this->uploadedFileHash();
+
+                if ($hash && DigitalResource::where('file_hash', $hash)
+                    ->when($resourceId, fn ($query) => $query->where('resource_id', '<>', $resourceId))
+                    ->exists()) {
+                    $validator->errors()->add('file_path', 'Este ficheiro ja foi submetido como recurso digital.');
+                }
+            } elseif ($this->filled('file_path')) {
+                $path = (string) $this->input('file_path');
+
+                if (DigitalResource::where('file_path', $path)
+                    ->when($resourceId, fn ($query) => $query->where('resource_id', '<>', $resourceId))
+                    ->exists()) {
+                    $validator->errors()->add('file_path', 'Este ficheiro ja foi submetido como recurso digital.');
+                }
+            }
+        });
     }
 
     /**
@@ -99,5 +138,19 @@ abstract class DigitalResourceFormRequest extends FormRequest
         $value = trim((string) $this->input($field));
 
         return $value === '' ? null : $value;
+    }
+
+    private function currentResourceId(): ?int
+    {
+        $id = $this->route('digital_resource') ?? $this->route('resource');
+
+        return $id instanceof Resource ? (int) $id->id : ($id ? (int) $id : null);
+    }
+
+    private function uploadedFileHash(): ?string
+    {
+        $file = $this->file('file_path');
+
+        return $file ? hash_file('sha256', $file->getRealPath()) : null;
     }
 }

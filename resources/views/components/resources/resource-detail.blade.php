@@ -47,13 +47,17 @@
         ];
         $coverClass = $coverClasses[$resource->id % count($coverClasses)];
         $coverTitle = wordwrap(strtoupper(collect(preg_split('/\s+/', trim($resource->title)))->take(4)->implode(' ')), 13, "\n", true);
+        $digitalDownloads = (int) ($resource->downloads_count ?? 0);
+        $digitalLikes = (int) ($resource->favorites_count ?? $resource->favoritedBy()->count());
+
         $details = $isDigital
             ? [
                 'Tipo de ficheiro' => $fileType,
+                'Autores' => $resource->authors ?: 'Nao definido',
                 'Permissão' => $accessTypeLabels[$accessType] ?? 'Não definido',
-                'Janela de acesso' => $digital?->access_days ? $digital->access_days . ' dias' : 'Não definido',
             ]
             : [
+                'Autores' => $resource->authors ?: 'Nao definido',
                 'Localização' => $physical?->location ?: 'Não definido',
                 'Prazo máximo' => $physical?->max_loan_days ? $physical->max_loan_days . ' dias' : 'Não definido',
                 'Condição' => $physical?->condition ?: 'Não definido',
@@ -78,7 +82,7 @@
                         </div>
                         <div>
                             <p class="whitespace-pre-line text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">{{ $coverTitle }}</p>
-                            <p class="mt-5 text-xs font-semibold uppercase tracking-[0.28em] text-white/75">{{ strtoupper($resource->owner?->name ?? 'VUTIVI') }}</p>
+                            <p class="mt-5 text-xs font-semibold uppercase tracking-[0.28em] text-white/75">{{ strtoupper($resource->authors ?: ($resource->owner?->name ?? 'VUTIVI')) }}</p>
                         </div>
                     </div>
                 </div>
@@ -102,6 +106,16 @@
                         @unless ($isDigital)
                             <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">{{ $quantity }} {{ $quantity === 1 ? 'cópia disponível' : 'cópias disponíveis' }}</span>
                         @endunless
+                        @if ($isDigital)
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">
+                                <svg class="h-3.5 w-3.5 text-[#FE6807]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                                {{ $digitalDownloads }} {{ $digitalDownloads === 1 ? 'download' : 'downloads' }}
+                            </span>
+                            <span class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">
+                                <svg class="h-3.5 w-3.5 text-[#FE6807]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 21-1.45-1.32C5.4 15.02 2 11.93 2 8.15 2 5.06 4.42 3 7.5 3c1.74 0 3.41.8 4.5 2.05A6.02 6.02 0 0 1 16.5 3C19.58 3 22 5.06 22 8.15c0 3.78-3.4 6.87-8.55 11.53L12 21Z"/></svg>
+                                {{ $digitalLikes }} {{ $digitalLikes === 1 ? 'gosto' : 'gostos' }}
+                            </span>
+                        @endif
                         <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#8a5d40] ring-1 ring-[#f5e1d1] dark:bg-black dark:text-[#d5c7be] dark:ring-[#241915]">Dono: {{ $resource->owner?->name ?? 'Não definido' }}</span>
                     </div>
 
