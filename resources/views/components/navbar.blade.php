@@ -28,7 +28,8 @@
     ];
 
     // Cache por utilizador durante 5 minutos para evitar 8 queries por página
-    $notifications = cache()->remember(
+    // Armazena array simples (não Collection) para evitar erros de unserialize
+    $notifications = collect(cache()->remember(
         "navbar_notifications_{$user?->id}",
         300,
         function () use ($user, $hasResourceTables) {
@@ -116,9 +117,9 @@
                 }
             }
 
-            return $built->take(5)->values();
+            return $built->take(5)->values()->toArray();
         }
-    );
+    ));
 
     $notificationCount = $notifications->count();
     $suggestions = $hasResourceTables ? Resource::latest()->limit(6)->get(['title', 'type', 'status']) : collect();

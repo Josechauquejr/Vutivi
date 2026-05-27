@@ -2,10 +2,15 @@
 
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DigitalResourceController;
+use App\Http\Controllers\FineController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PhysicalResourceController;
+use App\Http\Controllers\ReadingListController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ResourceController;
+use App\Http\Controllers\ResourceReviewController;
 use App\Http\Controllers\ReservationController;
 use App\Http\Controllers\ReservationTermsController;
 use App\Http\Controllers\UserController;
@@ -64,6 +69,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::get('/home', [ResourceController::class, 'index'])->name('home');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/borrowed', [ResourceController::class, 'borrowed'])->name('borrowed');
     Route::get('/lent', [ResourceController::class, 'lent'])->name('lent');
     Route::get('/loan-alerts', [ResourceController::class, 'loanAlerts'])->name('loan-alerts');
@@ -73,6 +79,26 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::post('/resources/{resource}/favorite', [ResourceController::class, 'toggleFavorite'])->name('resources.favorite');
     Route::get('/resources/{resource}/digital/view', [ResourceController::class, 'viewDigital'])->name('resources.digital.view');
     Route::get('/resources/{resource}/digital/download', [ResourceController::class, 'downloadDigital'])->name('resources.digital.download');
+
+    // Reviews
+    Route::post('/resources/{resource}/reviews', [ResourceReviewController::class, 'store'])->name('resources.reviews.store');
+    Route::delete('/resources/{resource}/reviews', [ResourceReviewController::class, 'destroy'])->name('resources.reviews.destroy');
+
+    // Reading lists
+    Route::get('/reading-lists', [ReadingListController::class, 'index'])->name('reading-lists.index');
+    Route::post('/reading-lists', [ReadingListController::class, 'store'])->name('reading-lists.store');
+    Route::delete('/reading-lists/{list}', [ReadingListController::class, 'destroy'])->name('reading-lists.destroy');
+    Route::post('/reading-lists/{list}/items', [ReadingListController::class, 'addItem'])->name('reading-lists.items.add');
+    Route::delete('/reading-lists/{list}/items/{resource}', [ReadingListController::class, 'removeItem'])->name('reading-lists.items.remove');
+
+    // Fines
+    Route::get('/fines', [FineController::class, 'index'])->name('fines.index');
+
+    // Reports (personal)
+    Route::get('/reports/active-loans', [ReportController::class, 'activeLoans'])->name('reports.active-loans');
+    Route::get('/reports/overdue-loans', [ReportController::class, 'overdueLoans'])->name('reports.overdue-loans');
+    Route::get('/reports/loan-history', [ReportController::class, 'loanHistory'])->name('reports.loan-history');
+    Route::get('/reports/fines', [ReportController::class, 'fines'])->name('reports.fines');
 
     Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
         Route::get('{user}/edit', 'edit')->name('edit');
@@ -86,9 +112,11 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
         Route::patch('{id}/approve', 'approve')->name('approve');
         Route::patch('{id}/deny', 'deny')->name('deny');
         Route::patch('{id}/return', 'return')->name('return');
+        Route::patch('{id}/auto-renew', 'autoRenew')->name('auto-renew');
         Route::patch('{id}/request-extension', 'requestExtension')->name('extension.request');
         Route::patch('{id}/approve-extension', 'approveExtension')->name('extension.approve');
         Route::patch('{id}/deny-extension', 'denyExtension')->name('extension.deny');
+        Route::post('bulk', 'bulkAction')->name('bulk');
     });
 
     Route::get('/resources/{resource}/terms', [ReservationTermsController::class, 'showTerms'])->name('reservations.terms.show');

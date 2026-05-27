@@ -111,4 +111,34 @@ class User extends Authenticatable
     {
         return $this->hasMany(ModerationNotification::class);
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(ResourceReview::class);
+    }
+
+    public function readingLists()
+    {
+        return $this->hasMany(ReadingList::class);
+    }
+
+    public function searchHistory()
+    {
+        return $this->hasMany(SearchHistory::class);
+    }
+
+    public function fines()
+    {
+        return $this->hasMany(Fine::class);
+    }
+
+    public function isLibrarian(): bool
+    {
+        return $this->role === 'librarian';
+    }
+
+    public function canManageLoans(): bool
+    {
+        return $this->isAdmin() || $this->isLibrarian();
+    }
 }

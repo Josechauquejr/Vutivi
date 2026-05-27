@@ -143,4 +143,19 @@ class Resource extends Model
     {
         return $this->belongsToMany(User::class, 'resource_user_favorites')->withTimestamps();
     }
+
+    public function reviews()
+    {
+        return $this->hasMany(ResourceReview::class);
+    }
+
+    public function accessLogs()
+    {
+        return $this->hasMany(DigitalAccessLog::class);
+    }
+
+    public function averageRating(): float
+    {
+        return (float) $this->reviews()->avg('stars');
+    }
 }

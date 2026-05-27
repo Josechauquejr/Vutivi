@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Reservations\AutoRenewReservation;
 use App\Actions\Reservations\CreateReservation;
 use App\Actions\Reservations\DeleteReservation;
+use App\Actions\Reservations\IssueFine;
 use App\Actions\Reservations\ReturnReservation;
 use App\Actions\Reservations\SyncResourceAvailability;
 use App\Actions\Reservations\UpdateReservation;
@@ -32,6 +34,8 @@ class ReservationController extends Controller
         private ReturnReservation $returnReservation,
         private ValidateReservationAgainstResource $validateReservationAgainstResource,
         private SyncResourceAvailability $syncResourceAvailability,
+        private AutoRenewReservation $autoRenewReservation,
+        private IssueFine $issueFine,
     ) {
     }
 
@@ -207,6 +211,7 @@ class ReservationController extends Controller
 
         $this->returnReservation->handle($reservation);
         $this->syncResourceAvailability->handle($reservation->resource->fresh());
+        $this->issueFine->handle($reservation->fresh());
 
         if (request()->expectsJson()) {
             $resource = $reservation->resource->fresh();
@@ -339,6 +344,70 @@ class ReservationController extends Controller
         ]);
 
         return back()->with('error', 'Extensão negada. O prazo original permanece ativo.');
+    }
+
+    public function autoRenew(int $id)
+    {
+        $reservation = $this->reservation($id);
+        abort_unless((int) $reservation->user_id === (int) auth()->id(), 403);
+
+        $this->autoRenewReservation->handle($reservation);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'message'  => 'Renovação automática aplicada.',
+                'end_date' => $reservation->fresh()->end_date->format('d/m/Y'),
+            ]);
+        }
+
+        return back()->with('success', 'Empréstimo renovado automaticamente.');
+    }
+
+    public function bulkAction(Request $request)
+    {
+        $data = $request->validate([
+            'action' => 'required|in:approve,deny',
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer',
+        ]);
+
+        $reservations = Reservation::with('resource')
+            ->whereIn('id', $data['ids'])
+            ->whereHas('resource', fn ($q) => $q->where('owner_id', auth()->id()))
+            ->where('status', Reservation::STATUS_PENDING)
+            ->get();
+
+        $count = 0;
+
+        foreach ($reservations as $reservation) {
+            if ($data['action'] === 'approve') {
+                DB::transaction(function () use ($reservation) {
+                    $resource = Resource::whereKey($reservation->resource_id)->lockForUpdate()->firstOrFail();
+
+                    if ((int) $resource->quantity_available <= 0) {
+                        return;
+                    }
+
+                    $resource->decrement('quantity_available');
+                    $resource->refresh();
+                    $resource->update(['status' => (int) $resource->quantity_available > 0 ? 'available' : 'reserved']);
+
+                    $reservation->update([
+                        'status'      => Reservation::STATUS_IN_USE,
+                        'approved_by' => auth()->id(),
+                        'approved_at' => now(),
+                        'picked_up_at' => now(),
+                    ]);
+                });
+            } else {
+                $reservation->update(['status' => Reservation::STATUS_DENIED]);
+                $this->syncResourceAvailability->handle($reservation->resource->fresh());
+            }
+
+            $count++;
+        }
+
+        return back()->with('success', "{$count} pedido(s) " . ($data['action'] === 'approve' ? 'aprovado(s)' : 'recusado(s)') . '.');
     }
 
     /**

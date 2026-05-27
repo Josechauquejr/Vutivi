@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Resource;
+use App\Models\DigitalAccessLog;
 use App\Models\Reservation;
+use App\Models\Resource;
+use App\Models\SearchHistory;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
@@ -75,9 +78,46 @@ class ResourceController extends Controller
     {
         abort_unless($this->canOpenResource($resource), 404);
 
-        $resource->load(['owner', 'physicalResource', 'digitalResource', 'reservations.user']);
+        $resource->load(['owner', 'physicalResource', 'digitalResource', 'reservations.user', 'reviews.user']);
 
-        return view('resources.show', compact('resource'));
+        $reviews        = $resource->reviews()->with('user:id,name,profile_photo')->latest()->get();
+        $avgRating      = $reviews->avg('stars') ?? 0;
+        $userReview     = auth()->check()
+            ? $reviews->firstWhere('user_id', auth()->id())
+            : null;
+        $canReview      = auth()->check() && ! $userReview
+            && \App\Models\Reservation::where('user_id', auth()->id())
+                ->where('resource_id', $resource->id)
+                ->where('status', \App\Models\Reservation::STATUS_RETURNED)
+                ->exists();
+
+        $recommendations = $this->recommendations($resource);
+
+        $readingLists = auth()->check()
+            ? \App\Models\ReadingList::where('user_id', auth()->id())->get(['id', 'name'])
+            : collect();
+
+        return view('resources.show', compact('resource', 'reviews', 'avgRating', 'userReview', 'canReview', 'recommendations', 'readingLists'));
+    }
+
+    public function recommendations(Resource $resource)
+    {
+        // Utilizadores que emprestaram este recurso também emprestaram...
+        $siblingUserIds = \App\Models\Reservation::where('resource_id', $resource->id)
+            ->pluck('user_id');
+
+        if ($siblingUserIds->isEmpty()) {
+            return collect();
+        }
+
+        return Resource::whereHas('reservations', fn ($q) => $q->whereIn('user_id', $siblingUserIds))
+            ->where('id', '!=', $resource->id)
+            ->where('moderation_status', 'approved')
+            ->where(fn ($q) => $q->where('type', '!=', 'physical')->orWhere('status', 'available'))
+            ->withCount('reservations')
+            ->orderByDesc('reservations_count')
+            ->limit(4)
+            ->get();
     }
 
     public function viewDigital(Resource $resource)
@@ -93,6 +133,14 @@ class ResourceController extends Controller
         abort_unless($disk, 404);
 
         $filename = $this->safeDigitalFilename($resource);
+
+        DigitalAccessLog::create([
+            'resource_id' => $resource->id,
+            'user_id'     => auth()->id(),
+            'action'      => DigitalAccessLog::ACTION_VIEW,
+            'ip'          => request()->ip(),
+            'accessed_at' => now(),
+        ]);
 
         return Storage::disk($disk)->response($path, $filename, [
             'Content-Disposition' => 'inline; filename="'.$filename.'"',
@@ -112,6 +160,14 @@ class ResourceController extends Controller
         abort_unless($disk, 404);
 
         $resource->increment('downloads_count');
+
+        DigitalAccessLog::create([
+            'resource_id' => $resource->id,
+            'user_id'     => auth()->id(),
+            'action'      => DigitalAccessLog::ACTION_DOWNLOAD,
+            'ip'          => request()->ip(),
+            'accessed_at' => now(),
+        ]);
 
         return Storage::disk($disk)->download($path, $this->safeDigitalFilename($resource));
     }
@@ -143,18 +199,49 @@ class ResourceController extends Controller
         $search = trim((string) $request->query('q', ''));
 
         if (mb_strlen($search) < 2) {
+            // Return recent search history if no query
+            if (auth()->check()) {
+                $history = SearchHistory::where('user_id', auth()->id())
+                    ->select('query')
+                    ->orderByDesc('searched_at')
+                    ->limit(5)
+                    ->distinct()
+                    ->pluck('query');
+
+                return response()->json(['history' => $history]);
+            }
+
             return response()->json([]);
+        }
+
+        // Save search history for authenticated users (deduplicated per session)
+        if (auth()->check() && mb_strlen($search) >= 3) {
+            SearchHistory::create([
+                'user_id'     => auth()->id(),
+                'query'       => mb_substr($search, 0, 200),
+                'searched_at' => now(),
+            ]);
+
+            // Keep only the last 50 searches per user
+            $ids = SearchHistory::where('user_id', auth()->id())
+                ->orderByDesc('searched_at')
+                ->skip(50)
+                ->pluck('id');
+
+            if ($ids->isNotEmpty()) {
+                SearchHistory::whereIn('id', $ids)->delete();
+            }
         }
 
         return $this->resourceQuery($request, excludeReservedPhysical: true)
             ->limit(8)
             ->get()
             ->map(fn (Resource $resource) => [
-                'title' => $resource->title,
-                'authors' => $resource->authors,
-                'type' => $resource->type,
+                'title'       => $resource->title,
+                'authors'     => $resource->authors,
+                'type'        => $resource->type,
                 'description' => str($resource->description ?? '')->limit(92)->toString(),
-                'url' => $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id),
+                'url'         => $resource->slug ? route('resources.public.show', $resource->slug) : route('resources.show', $resource->id),
             ]);
     }
 
@@ -365,6 +452,19 @@ class ResourceController extends Controller
                 'reservations as loans_count',
             ])
             ->when($search !== '', function ($query) use ($search) {
+                if (Schema::hasColumn('resources', 'search_vector')) {
+                    $tsquery = implode(' & ', array_map(
+                        fn ($w) => $w . ':*',
+                        array_filter(explode(' ', preg_replace('/[^a-zA-ZÀ-ÿ0-9 ]/', '', $search)))
+                    ));
+
+                    if ($tsquery !== '') {
+                        $query->whereRaw("search_vector @@ to_tsquery('portuguese', ?)", [$tsquery])
+                            ->orderByRaw("ts_rank(search_vector, to_tsquery('portuguese', ?)) DESC", [$tsquery]);
+                        return;
+                    }
+                }
+
                 $query->where(function ($query) use ($search) {
                     $query->where('title', 'like', "%{$search}%")
                         ->orWhere('authors', 'like', "%{$search}%")

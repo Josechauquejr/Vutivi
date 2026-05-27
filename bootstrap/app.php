@@ -12,7 +12,8 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'not_admin' => \App\Http\Middleware\RedirectAdminsToModeration::class,
+            'not_admin'  => \App\Http\Middleware\RedirectAdminsToModeration::class,
+            'librarian'  => \App\Http\Middleware\LibrarianMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
