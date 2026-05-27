@@ -4,6 +4,7 @@ namespace App\Actions\Reservations;
 
 use App\Models\Reservation;
 use App\Models\Resource;
+use App\Notifications\ResourceReturnedNotification;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,10 +19,11 @@ class ReturnReservation
      */
     public function handle(Reservation $reservation): void
     {
-        $resourceId = null;
+        $resourceId    = null;
+        $returnedReservation = null;
 
-        DB::transaction(function () use ($reservation, &$resourceId) {
-            $reservation = Reservation::with('resource')->whereKey($reservation->id)->lockForUpdate()->firstOrFail();
+        DB::transaction(function () use ($reservation, &$resourceId, &$returnedReservation) {
+            $reservation = Reservation::with('resource.owner', 'user')->whereKey($reservation->id)->lockForUpdate()->firstOrFail();
 
             if ($reservation->returned_at) {
                 return;
@@ -36,6 +38,8 @@ class ReturnReservation
                 'status' => Reservation::STATUS_RETURNED,
             ]);
 
+            $returnedReservation = $reservation;
+
             if ($heldCopy) {
                 $resource = Resource::whereKey($reservation->resource_id)->lockForUpdate()->first();
 
@@ -47,6 +51,15 @@ class ReturnReservation
                 }
             }
         });
+
+        if ($returnedReservation) {
+            $owner = $returnedReservation->resource?->owner;
+            $borrower = $returnedReservation->user;
+
+            if ($owner && $borrower && (int) $owner->id !== (int) $borrower->id) {
+                $owner->notify(new ResourceReturnedNotification($returnedReservation));
+            }
+        }
 
         if ($resourceId) {
             $this->notifyWaitlist->handle(Resource::findOrFail($resourceId));
