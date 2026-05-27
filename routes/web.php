@@ -97,8 +97,17 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     Route::resources([
         'physical-resources' => PhysicalResourceController::class,
         'digital-resources' => DigitalResourceController::class,
-        'reservations' => ReservationController::class,
     ]);
+
+    // Reservations with throttle on write operations
+    Route::resource('reservations', ReservationController::class)
+        ->only(['index', 'show', 'create', 'edit', 'destroy']);
+
+    Route::middleware('throttle:reservations')->group(function () {
+        Route::post('/reservations', [ReservationController::class, 'store'])->name('reservations.store');
+        Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
+        Route::patch('/reservations/{reservation}', [ReservationController::class, 'update']);
+    });
 });
 
 Route::middleware('auth')->post('/logout', [LoginController::class, 'destroy'])->name('logout');

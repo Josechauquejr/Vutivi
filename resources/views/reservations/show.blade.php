@@ -120,7 +120,7 @@
                         <button type="button" data-open-extension class="rounded-lg border border-[#decbb8] px-4 py-2 text-sm font-semibold text-[#5f4632] transition hover:border-[#FE6807] hover:text-[#FE6807] dark:border-[#332820] dark:text-[#d8cec3]">Pedir extensão</button>
                     @endif
 
-                    @if (! $reservation->returned_at && ($isBorrower || $isOwner))
+                    @if (! $reservation->returned_at && $isBorrower)
                         <button type="button" data-open-return class="rounded-lg bg-[#FE6807] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#e15f07]">Marcar como devolvido</button>
                     @endif
 
@@ -133,7 +133,9 @@
                             <form method="POST" action="{{ route('reservations.extension.approve', $reservation->id) }}">@csrf @method('PATCH')<button class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white">Aceitar extensão</button></form>
                             <form method="POST" action="{{ route('reservations.extension.deny', $reservation->id) }}">@csrf @method('PATCH')<button class="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white">Recusar extensão</button></form>
                         @endif
-                        <a href="{{ route('reservations.edit', $reservation->id) }}" class="rounded-lg border border-[#decbb8] px-4 py-2 text-sm font-semibold text-[#5f4632] transition hover:border-[#FE6807] hover:text-[#FE6807] dark:border-[#332820] dark:text-[#d8cec3]">Editar gestão</a>
+                        @if ($reservation->status !== \App\Models\Reservation::STATUS_EXTENSION_PENDING)
+                            <a href="{{ route('reservations.edit', $reservation->id) }}" class="rounded-lg border border-[#decbb8] px-4 py-2 text-sm font-semibold text-[#5f4632] transition hover:border-[#FE6807] hover:text-[#FE6807] dark:border-[#332820] dark:text-[#d8cec3]">Editar gestão</a>
+                        @endif
                     @endif
                 </div>
             </div>

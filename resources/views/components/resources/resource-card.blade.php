@@ -1,7 +1,7 @@
 @props(['resource'])
 
 @php
-    $accessUrl = auth()->check() ? ($resource['show_route'] ?? route('resources.show', $resource['id'])) : route('login');
+    $accessUrl = $resource['show_route'] ?? route('resources.show', $resource['id']);
     $isDigital = ($resource['type'] ?? null) === 'digital';
     $isAvailable = str_contains(strtolower($resource['status'] ?? ''), 'dispon');
     $favoriteLabel = ($resource['is_favorited'] ?? false) ? 'Favorito' : 'Favoritar';

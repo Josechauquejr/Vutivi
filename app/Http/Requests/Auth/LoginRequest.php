@@ -44,6 +44,11 @@ class LoginRequest extends FormRequest
         return $this->only('username', 'password');
     }
 
+    public function remember(): bool
+    {
+        return $this->boolean('remember');
+    }
+
     protected function prepareForValidation(): void
     {
         // Normalizamos na borda para que validacao e autenticacao usem a mesma identidade.

@@ -228,6 +228,7 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservationDetails($id);
         abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless($reservation->status === Reservation::STATUS_PENDING, 422);
 
         DB::transaction(function () use ($id) {
             $reservation = Reservation::with('resource')->whereKey($id)->lockForUpdate()->firstOrFail();
@@ -317,6 +318,7 @@ class ReservationController extends Controller
             'extension_decision' => Reservation::EXTENSION_APPROVED,
             'extension_decided_at' => now(),
             'extension_decision_note' => $request->input('extension_decision_note'),
+            'extension_reviewed_by' => auth()->id(),
         ]);
 
         return back()->with('success', 'Extensão aprovada. O novo prazo foi aplicado.');
@@ -333,6 +335,7 @@ class ReservationController extends Controller
             'extension_decision' => Reservation::EXTENSION_DENIED,
             'extension_decided_at' => now(),
             'extension_decision_note' => $request->input('extension_decision_note'),
+            'extension_reviewed_by' => auth()->id(),
         ]);
 
         return back()->with('error', 'Extensão negada. O prazo original permanece ativo.');
@@ -404,7 +407,7 @@ class ReservationController extends Controller
             $old = Resource::whereKey($previousResource->id)->lockForUpdate()->first();
             $new = Resource::whereKey($currentResource->id)->lockForUpdate()->first();
 
-            if ($old && (int) $old->quantity_available <= 0) {
+            if ($old) {
                 $old->increment('quantity_available');
                 $old->refresh();
                 $old->update(['status' => 'available']);

@@ -11,12 +11,16 @@ use Illuminate\Support\Facades\DB;
  */
 class ReturnReservation
 {
+    public function __construct(private NotifyWaitlist $notifyWaitlist) {}
+
     /**
      * Registra a data e hora de devolucao.
      */
     public function handle(Reservation $reservation): void
     {
-        DB::transaction(function () use ($reservation) {
+        $resourceId = null;
+
+        DB::transaction(function () use ($reservation, &$resourceId) {
             $reservation = Reservation::with('resource')->whereKey($reservation->id)->lockForUpdate()->firstOrFail();
 
             if ($reservation->returned_at) {
@@ -39,8 +43,13 @@ class ReturnReservation
                     $resource->increment('quantity_available');
                     $resource->refresh();
                     $resource->update(['status' => (int) $resource->quantity_available > 0 ? 'available' : 'reserved']);
+                    $resourceId = $resource->id;
                 }
             }
         });
+
+        if ($resourceId) {
+            $this->notifyWaitlist->handle(Resource::findOrFail($resourceId));
+        }
     }
 }

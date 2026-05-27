@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Reservas preservam o historico de emprestimo; a devolucao encerra o registro sem apaga-lo.
  */
 class Reservation extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'resource_id',
         'user_id',
@@ -28,9 +31,9 @@ class Reservation extends Model
         'extension_decision',
         'extension_decided_at',
         'extension_decision_note',
+        'extension_reviewed_by',
     ];
 
-    // Estados da requisição
     const STATUS_PENDING = 'pending';
     const STATUS_APPROVED = 'approved';
     const STATUS_IN_USE = 'in_use';
@@ -50,11 +53,14 @@ class Reservation extends Model
         self::STATUS_EXTENDED,
     ];
 
-    /**
-     * Retorna os casts aplicados aos atributos do modelo.
-     *
-     * @return array<string, string>
-     */
+    public const ACTIVE_LOAN_STATUSES = [
+        self::STATUS_IN_USE,
+        self::STATUS_EXTENSION_PENDING,
+        self::STATUS_EXTENDED,
+    ];
+
+    public const MAX_SIMULTANEOUS_LOANS = 3;
+
     protected function casts(): array
     {
         return [
@@ -69,96 +75,76 @@ class Reservation extends Model
         ];
     }
 
-    /**
-     * Retorna o usuario que realizou a reserva.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    /**
-     * Retorna o recurso vinculado a reserva.
-     */
     public function resource()
     {
         return $this->belongsTo(Resource::class);
     }
 
-    /**
-     * Retorna o admin que aprovou (se houver).
-     */
     public function approver()
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
-    /**
-     * Retorna as aceitações de termos desta reserva.
-     */
+    public function extensionReviewer()
+    {
+        return $this->belongsTo(User::class, 'extension_reviewed_by');
+    }
+
     public function termAcceptances()
     {
         return $this->hasMany(TermAcceptance::class);
     }
 
-    /**
-     * Verifica se a reserva pode ser estendida.
-     */
     public function canExtend(): bool
     {
-        return in_array($this->status, [self::STATUS_APPROVED, self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
-               $this->resource?->physicalResource &&
-               $this->extension_count < $this->resource->physicalResource->max_extensions &&
-               $this->resource->physicalResource->allow_extension;
+        // Garantir que a relação está carregada antes de aceder
+        $physicalResource = $this->relationLoaded('resource')
+            ? $this->resource?->physicalResource
+            : $this->load('resource.physicalResource')->resource?->physicalResource;
+
+        return in_array($this->status, [self::STATUS_APPROVED, self::STATUS_IN_USE, self::STATUS_EXTENDED], true)
+            && $physicalResource !== null
+            && (int) $this->extension_count < (int) $physicalResource->max_extensions
+            && $physicalResource->allow_extension;
     }
 
-    /**
-     * Verifica se a reserva está atrasada.
-     */
     public function isOverdue(): bool
     {
-        return in_array($this->status, [self::STATUS_IN_USE, self::STATUS_EXTENDED], true) &&
-               now()->toDateString() > $this->end_date->toDateString();
+        return in_array($this->status, [self::STATUS_IN_USE, self::STATUS_EXTENDED], true)
+            && now()->toDateString() > $this->end_date->toDateString();
     }
 
-    /**
-     * Retorna quantos dias está atrasado.
-     */
     public function daysOverdue(): int
     {
-        if (!$this->isOverdue()) {
+        if (! $this->isOverdue()) {
             return 0;
         }
-        return now()->diffInDays($this->end_date);
+
+        // diffInDays com $absolute=true devolve sempre positivo
+        return (int) $this->end_date->diffInDays(now());
     }
 
-    /**
-     * Scope: Reservas pendentes de aprovação.
-     */
+    /** Scope: pendentes de aprovação. */
     public function scopePending($query)
     {
         return $query->where('status', self::STATUS_PENDING);
     }
 
-    /**
-     * Scope: Reservas ativas (em uso).
-     */
+    /** Scope: activos (em posse). */
     public function scopeActive($query)
     {
-        return $query->whereIn('status', [
-            self::STATUS_APPROVED,
-            self::STATUS_IN_USE,
-            self::STATUS_EXTENSION_PENDING,
-            self::STATUS_EXTENDED,
-        ]);
+        return $query->whereIn('status', self::COPY_HOLDING_STATUSES);
     }
 
-    /**
-     * Scope: Reservas que venceram.
-     */
+    /** Scope: fora do prazo — inclui in_use E extended. */
     public function scopeOverdue($query)
     {
-        return $query->where('status', self::STATUS_IN_USE)
-            ->whereRaw('end_date < CURDATE()');
+        return $query->whereIn('status', [self::STATUS_IN_USE, self::STATUS_EXTENDED])
+            ->whereDate('end_date', '<', now()->toDateString());
     }
 }

@@ -15,9 +15,9 @@ class AuthenticateUser
      *
      * @param array<string, mixed> $credentials
      */
-    public function handle(array $credentials): void
+    public function handle(array $credentials, bool $remember = false): void
     {
-        if (! Auth::attempt($credentials)) {
+        if (! Auth::attempt($credentials, $remember)) {
             // Lancar a excecao preserva o fluxo feliz linear e deixa a camada HTTP decidir como mostrar a falha.
             throw InvalidCredentialsException::create();
         }

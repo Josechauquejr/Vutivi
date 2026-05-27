@@ -19,9 +19,13 @@ class ValidateReservationAgainstResource
      */
     public function handle(Resource $resource, array $reservationData, ?Reservation $currentReservation = null): void
     {
+        $userId = (int) ($reservationData['user_id'] ?? 0);
+
         $this->ensureResourceTypeMatches($resource, (string) $reservationData['type']);
-        $this->ensureResourceCanBeBorrowedByUser($resource, (int) ($reservationData['user_id'] ?? 0));
-        $this->ensureUserDoesNotHaveOpenReservation($resource, (int) ($reservationData['user_id'] ?? 0), $currentReservation);
+        $this->ensureResourceCanBeBorrowedByUser($resource, $userId);
+        $this->ensureUserHasNoOverdueLoans($userId, $currentReservation);
+        $this->ensureUserHasNotExceededLoanLimit($userId, $currentReservation);
+        $this->ensureUserDoesNotHaveOpenReservation($resource, $userId, $currentReservation);
         $this->ensureReservationWindowIsAllowed(
             $resource,
             (string) $reservationData['start_date'],
@@ -53,6 +57,41 @@ class ValidateReservationAgainstResource
         if ($resource->type === 'digital') {
             throw ValidationException::withMessages([
                 'resource_id' => 'Recursos digitais não entram no fluxo de empréstimos físicos.',
+            ]);
+        }
+    }
+
+    private function ensureUserHasNoOverdueLoans(int $userId, ?Reservation $currentReservation): void
+    {
+        $query = Reservation::where('user_id', $userId)
+            ->whereNull('returned_at')
+            ->whereIn('status', [Reservation::STATUS_IN_USE, Reservation::STATUS_EXTENDED])
+            ->whereDate('end_date', '<', now()->toDateString());
+
+        if ($currentReservation !== null) {
+            $query->whereKeyNot($currentReservation->getKey());
+        }
+
+        if ($query->exists()) {
+            throw ValidationException::withMessages([
+                'resource_id' => 'Tem empréstimos em atraso. Devolva os recursos em falta antes de solicitar novos empréstimos.',
+            ]);
+        }
+    }
+
+    private function ensureUserHasNotExceededLoanLimit(int $userId, ?Reservation $currentReservation): void
+    {
+        $query = Reservation::where('user_id', $userId)
+            ->whereNull('returned_at')
+            ->whereIn('status', Reservation::COPY_HOLDING_STATUSES);
+
+        if ($currentReservation !== null) {
+            $query->whereKeyNot($currentReservation->getKey());
+        }
+
+        if ($query->count() >= Reservation::MAX_SIMULTANEOUS_LOANS) {
+            throw ValidationException::withMessages([
+                'resource_id' => 'Atingiu o limite de ' . Reservation::MAX_SIMULTANEOUS_LOANS . ' empréstimos simultâneos.',
             ]);
         }
     }

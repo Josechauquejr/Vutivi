@@ -40,7 +40,7 @@ class LoginController extends Controller
     public function store(LoginRequest $request): RedirectResponse
     {
         try {
-            $this->authenticateUser->handle($request->credentials());
+            $this->authenticateUser->handle($request->credentials(), $request->remember());
         } catch (InvalidCredentialsException $exception) {
             return back()
                 ->withInput($request->only('username'))

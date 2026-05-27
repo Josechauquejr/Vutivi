@@ -36,7 +36,13 @@
                 @error('password')<p class="field-error">{{ $message }}</p>@enderror
             </label>
 
-            <a href="{{ route('password.request') }}" class="forgot-password">Esqueceu a palavra-passe?</a>
+            <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 cursor-pointer select-none text-sm text-[#241b14] dark:text-white">
+                    <input type="checkbox" name="remember" id="remember" class="w-4 h-4 accent-[#7c3aed]">
+                    Lembrar-me
+                </label>
+                <a href="{{ route('password.request') }}" class="forgot-password">Esqueceu a palavra-passe?</a>
+            </div>
             <button type="submit" class="btn-login">Entrar</button>
         </form>
 

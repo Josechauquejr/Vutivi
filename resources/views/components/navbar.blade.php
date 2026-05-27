@@ -27,143 +27,99 @@
         ['label' => 'Prazos', 'route' => 'loan-alerts', 'icon' => 'clock'],
     ];
 
-    $notifications = collect();
+    // Cache por utilizador durante 5 minutos para evitar 8 queries por página
+    $notifications = cache()->remember(
+        "navbar_notifications_{$user?->id}",
+        300,
+        function () use ($user, $hasResourceTables) {
+            $built = collect();
 
-    if ($user) {
-        $extensionRequests = Reservation::with(['resource', 'user'])
-            ->whereHas('resource', fn ($query) => $query->where('owner_id', $user->id))
-            ->whereNull('returned_at')
-            ->where('status', Reservation::STATUS_EXTENSION_PENDING)
-            ->latest('extension_requested_at')
-            ->limit(2)
-            ->get();
+            if ($user) {
+                $extensionRequests = Reservation::with(['resource', 'user'])
+                    ->whereHas('resource', fn ($q) => $q->where('owner_id', $user->id))
+                    ->whereNull('returned_at')
+                    ->where('status', Reservation::STATUS_EXTENSION_PENDING)
+                    ->latest('extension_requested_at')
+                    ->limit(2)->get();
 
-        foreach ($extensionRequests as $reservation) {
-            $notifications->push([
-                'title' => 'Pedido de extensao pendente',
-                'body' => (optional($reservation->user)->name ?? 'Utilizador') . ' pediu mais tempo para ' . (optional($reservation->resource)->title ?? 'um recurso'),
-                'route' => route('reservations.show', $reservation->id),
-                'icon' => 'clock',
-            ]);
-        }
+                foreach ($extensionRequests as $r) {
+                    $built->push(['title' => 'Pedido de extensão pendente', 'body' => (optional($r->user)->name ?? 'Utilizador') . ' pediu mais tempo para ' . (optional($r->resource)->title ?? 'um recurso'), 'route' => route('reservations.show', $r->id), 'icon' => 'clock', 'type' => 'warning']);
+                }
 
-        $extensionDecisions = Reservation::with('resource')
-            ->where('user_id', $user->id)
-            ->whereNotNull('extension_decision')
-            ->whereNotNull('extension_decided_at')
-            ->latest('extension_decided_at')
-            ->limit(2)
-            ->get();
+                $extensionDecisions = Reservation::with('resource')
+                    ->where('user_id', $user->id)
+                    ->whereNotNull('extension_decision')->whereNotNull('extension_decided_at')
+                    ->latest('extension_decided_at')->limit(2)->get();
 
-        foreach ($extensionDecisions as $reservation) {
-            $approved = $reservation->extension_decision === Reservation::EXTENSION_APPROVED;
+                foreach ($extensionDecisions as $r) {
+                    $ok = $r->extension_decision === Reservation::EXTENSION_APPROVED;
+                    $built->push(['title' => $ok ? 'Extensão aprovada' : 'Extensão recusada', 'body' => optional($r->resource)->title . ($ok ? ' recebeu um novo prazo.' : ' mantém o prazo original.'), 'route' => route('reservations.show', $r->id), 'icon' => $ok ? 'check-circle' : 'x-circle', 'type' => $ok ? 'positive' : 'negative']);
+                }
 
-            $notifications->push([
-                'title' => $approved ? 'Extensao aprovada' : 'Extensao recusada',
-                'body' => optional($reservation->resource)->title . ($approved ? ' recebeu um novo prazo.' : ' mantem o prazo original.'),
-                'route' => route('reservations.show', $reservation->id),
-                'icon' => $approved ? 'check-circle' : 'x-circle',
-            ]);
-        }
+                $overdueLoans = Reservation::with('resource')
+                    ->where('user_id', $user->id)->whereNull('returned_at')
+                    ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
+                    ->whereDate('end_date', '<', now()->toDateString())
+                    ->orderBy('end_date')->limit(2)->get();
 
-        $dueSoon = Reservation::with('resource')
-            ->where('user_id', $user->id)
-            ->whereNull('returned_at')
-            ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
-            ->whereDate('end_date', '<=', now()->addDays(3)->toDateString())
-            ->orderBy('end_date')
-            ->limit(2)
-            ->get();
+                foreach ($overdueLoans as $r) {
+                    $d = (int) now()->startOfDay()->diffInDays($r->end_date);
+                    $built->push(['title' => 'Prazo ultrapassado', 'body' => optional($r->resource)->title . ' — ' . $d . ' ' . ($d === 1 ? 'dia' : 'dias') . ' em atraso', 'route' => route('loan-alerts'), 'icon' => 'x-circle', 'type' => 'negative']);
+                }
 
-        foreach ($dueSoon as $reservation) {
-            $notifications->push([
-                'title' => 'Prazo próximo de devolução',
-                'body' => optional($reservation->resource)->title . ' vence em ' . optional($reservation->end_date)->format('d/m/Y'),
-                'route' => route('loan-alerts'),
-                'icon' => 'clock',
-            ]);
-        }
+                $dueSoon = Reservation::with('resource')
+                    ->where('user_id', $user->id)->whereNull('returned_at')
+                    ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
+                    ->whereDate('end_date', '>=', now()->toDateString())
+                    ->whereDate('end_date', '<=', now()->addDays(3)->toDateString())
+                    ->orderBy('end_date')->limit(2)->get();
 
-        $approvedLoans = Reservation::with('resource')
-            ->where('user_id', $user->id)
-            ->whereNotNull('approved_at')
-            ->latest('approved_at')
-            ->limit(1)
-            ->get();
+                foreach ($dueSoon as $r) {
+                    $d = (int) now()->startOfDay()->diffInDays($r->end_date);
+                    $built->push(['title' => 'Prazo próximo de devolução', 'body' => optional($r->resource)->title . ' — ' . ($d === 0 ? 'devolução hoje' : 'devolve em ' . $d . ' ' . ($d === 1 ? 'dia' : 'dias')), 'route' => route('loan-alerts'), 'icon' => 'clock', 'type' => 'warning']);
+                }
 
-        foreach ($approvedLoans as $reservation) {
-            $notifications->push([
-                'title' => 'Empréstimo aprovado',
-                'body' => optional($reservation->resource)->title ?? 'O seu pedido foi aprovado.',
-                'route' => route('borrowed'),
-                'icon' => 'check-circle',
-            ]);
-        }
+                $approvedLoans = Reservation::with('resource')
+                    ->where('user_id', $user->id)->whereNotNull('approved_at')
+                    ->latest('approved_at')->limit(1)->get();
 
-        $favoriteAvailable = Resource::whereHas('favoritedBy', fn ($query) => $query->where('users.id', $user->id))
-            ->where('status', 'available')
-            ->latest()
-            ->limit(1)
-            ->get();
+                foreach ($approvedLoans as $r) {
+                    $built->push(['title' => 'Empréstimo aprovado', 'body' => optional($r->resource)->title ?? 'O seu pedido foi aprovado.', 'route' => route('borrowed'), 'icon' => 'check-circle', 'type' => 'positive']);
+                }
 
-        foreach ($favoriteAvailable as $resource) {
-            $notifications->push([
-                'title' => 'Favorito disponivel',
-                'body' => $resource->title,
-                'route' => route('favorites'),
-                'icon' => 'heart',
-            ]);
-        }
+                $favoriteAvailable = Resource::whereHas('favoritedBy', fn ($q) => $q->where('users.id', $user->id))
+                    ->where('status', 'available')->latest()->limit(1)->get();
 
-        $moderationUpdates = Resource::where('owner_id', $user->id)
-            ->whereIn('moderation_status', ['review'])
-            ->latest('updated_at')
-            ->limit(2)
-            ->get();
+                foreach ($favoriteAvailable as $res) {
+                    $built->push(['title' => 'Favorito disponível', 'body' => $res->title, 'route' => route('favorites'), 'icon' => 'heart', 'type' => 'positive']);
+                }
 
-        foreach ($moderationUpdates as $resource) {
-            $rejected = $resource->moderation_status === 'rejected';
+                $moderationUpdates = Resource::where('owner_id', $user->id)
+                    ->whereIn('moderation_status', ['review'])->latest('updated_at')->limit(2)->get();
 
-            $notifications->push([
-                'title' => $rejected ? 'Recurso recusado' : 'Recurso em analise',
-                'body' => $rejected
-                    ? (($resource->moderation_reason ?: 'A moderacao recusou este recurso.') . ' - ' . $resource->title)
-                    : ('O recurso ' . $resource->title . ' passou por revisao por conta do conteudo. Aguarde a aprovacao do admin.'),
-                'route' => route('mine', ['q' => $resource->title]),
-                'icon' => $rejected ? 'x-circle' : 'clock',
-            ]);
-        }
+                foreach ($moderationUpdates as $res) {
+                    $rej = $res->moderation_status === 'rejected';
+                    $built->push(['title' => $rej ? 'Recurso recusado' : 'Recurso em análise', 'body' => $rej ? (($res->moderation_reason ?: 'A moderação recusou este recurso.') . ' - ' . $res->title) : ('O recurso ' . $res->title . ' está em revisão. Aguarde a aprovação do admin.'), 'route' => route('mine', ['q' => $res->title]), 'icon' => $rej ? 'x-circle' : 'clock', 'type' => $rej ? 'negative' : 'warning']);
+                }
 
-        if (Schema::hasTable('moderation_notifications')) {
-            $resourceDecisions = ModerationNotification::where('user_id', $user->id)
-                ->latest()
-                ->limit(3)
-                ->get();
-
-            foreach ($resourceDecisions as $notice) {
-                $approved = $notice->status === 'approved';
-
-                $notifications->push([
-                    'title' => $approved ? 'Recurso aprovado' : 'Recurso rejeitado',
-                    'body' => $notice->message,
-                    'route' => route('mine'),
-                    'icon' => $approved ? 'check-circle' : 'x-circle',
-                ]);
+                if (Schema::hasTable('moderation_notifications')) {
+                    foreach (ModerationNotification::where('user_id', $user->id)->latest()->limit(3)->get() as $notice) {
+                        $ok = $notice->status === 'approved';
+                        $built->push(['title' => $ok ? 'Recurso aprovado' : 'Recurso rejeitado', 'body' => $notice->message, 'route' => route('mine'), 'icon' => $ok ? 'check-circle' : 'x-circle', 'type' => $ok ? 'positive' : 'negative']);
+                    }
+                }
             }
+
+            if ($hasResourceTables) {
+                foreach (Resource::where('moderation_status', 'approved')->latest()->limit($user ? 1 : 2)->get() as $res) {
+                    $built->push(['title' => 'Novo recurso na biblioteca', 'body' => $res->title, 'route' => route('library', ['q' => $res->title]), 'icon' => 'sparkles', 'type' => 'positive']);
+                }
+            }
+
+            return $built->take(5)->values();
         }
-    }
+    );
 
-    $newResources = $hasResourceTables ? Resource::where('moderation_status', 'approved')->latest()->limit($user ? 1 : 2)->get() : collect();
-    foreach ($newResources as $resource) {
-        $notifications->push([
-            'title' => 'Novo recurso na biblioteca',
-            'body' => $resource->title,
-            'route' => route('library', ['q' => $resource->title]),
-            'icon' => 'sparkles',
-        ]);
-    }
-
-    $notifications = $notifications->take(5)->values();
     $notificationCount = $notifications->count();
     $suggestions = $hasResourceTables ? Resource::latest()->limit(6)->get(['title', 'type', 'status']) : collect();
 @endphp
@@ -245,18 +201,36 @@
                             <div class="mt-3 border-b border-[#f3e4d8] pb-2 text-[11px] font-black uppercase tracking-[0.2em] text-[#9b6b3f] dark:border-[#241915]">Hoje</div>
                             <div class="mt-2 max-h-80 overflow-y-auto">
                                 @forelse ($notifications as $notification)
-                                    <a href="{{ $notification['route'] }}" class="flex gap-3 rounded-xl p-3 hover:bg-[#fff7f0] dark:hover:bg-[#15110e]">
-                                        <span class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-lg bg-[#fff1e6] text-[#FE6807] dark:bg-[#17120f]">
+                                    @php
+                                        $nType = $notification['type'] ?? 'warning';
+                                        $nHover = match($nType) {
+                                            'positive' => 'hover:bg-emerald-50 dark:hover:bg-emerald-950/20',
+                                            'negative' => 'hover:bg-red-50 dark:hover:bg-red-950/20',
+                                            default    => 'hover:bg-amber-50 dark:hover:bg-amber-950/20',
+                                        };
+                                        $nIcon = match($nType) {
+                                            'positive' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
+                                            'negative' => 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400',
+                                            default    => 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
+                                        };
+                                        $nBadge = match($nType) {
+                                            'positive' => 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300',
+                                            'negative' => 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300',
+                                            default    => 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+                                        };
+                                    @endphp
+                                    <a href="{{ $notification['route'] }}" class="flex gap-3 rounded-xl p-3 {{ $nHover }}">
+                                        <span class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-lg {{ $nIcon }}">
                                             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M12 4h9"/><path d="M4 9h16"/><path d="M4 15h16"/></svg>
                                         </span>
                                         <span class="min-w-0">
                                             <span class="block text-sm font-bold text-[#2c1c13] dark:text-white">{{ $notification['title'] }}</span>
                                             <span class="block truncate text-xs leading-5 text-[#806856] dark:text-[#cfc5ba]">{{ $notification['body'] }}</span>
-                                            <span class="mt-1 inline-flex rounded-full bg-[#fff1e6] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] text-[#FE6807] dark:bg-[#17120f]">Não lida</span>
+                                            <span class="mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.14em] {{ $nBadge }}">Não lida</span>
                                         </span>
                                     </a>
                                 @empty
-                                    <div class="rounded-xl bg-[#fffaf5] p-4 text-sm text-[#806856] dark:bg-[#15110e] dark:text-[#cfc5ba]">Sem alertas pendentes. A biblioteca esta tranquila.</div>
+                                    <div class="rounded-xl bg-[#fffaf5] p-4 text-sm text-[#806856] dark:bg-[#15110e] dark:text-[#cfc5ba]">Sem alertas pendentes. A biblioteca está tranquila.</div>
                                 @endforelse
                             </div>
                         </div>

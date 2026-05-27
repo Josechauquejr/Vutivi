@@ -126,7 +126,7 @@ class ResourceController extends Controller
      */
     public function library(Request $request)
     {
-        $resources = $this->applySort($this->resourceQuery($request), $request)
+        $resources = $this->applySort($this->resourceQuery($request, excludeReservedPhysical: true), $request)
             ->paginate($this->perPage($request))
             ->withQueryString();
 
@@ -146,7 +146,7 @@ class ResourceController extends Controller
             return response()->json([]);
         }
 
-        return $this->resourceQuery($request)
+        return $this->resourceQuery($request, excludeReservedPhysical: true)
             ->limit(8)
             ->get()
             ->map(fn (Resource $resource) => [
@@ -352,7 +352,7 @@ class ResourceController extends Controller
     /**
      * Monta a consulta base do catalogo com pesquisa opcional.
      */
-    private function resourceQuery(Request $request, bool $includeUnavailableModeration = false)
+    private function resourceQuery(Request $request, bool $includeUnavailableModeration = false, bool $excludeReservedPhysical = false)
     {
         $search = trim((string) $request->query('q', ''));
         $type = $request->query('type');
@@ -388,6 +388,12 @@ class ResourceController extends Controller
                 ! $includeUnavailableModeration && Schema::hasColumn('resources', 'moderation_status'),
                 fn ($query) => $query->where('moderation_status', 'approved')
             )
+            ->when($excludeReservedPhysical && ! in_array($status, ['available', 'reserved', 'active'], true), function ($query) {
+                $query->where(function ($query) {
+                    $query->where('type', '!=', 'physical')
+                        ->orWhere('status', 'available');
+                });
+            })
             ->withExists(['favoritedBy as is_favorited' => fn ($query) => $query->where('users.id', auth()->id() ?? 0)]);
     }
 
