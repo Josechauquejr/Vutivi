@@ -55,14 +55,16 @@
                     ['label' => 'Exportar dados', 'route' => 'reports.index', 'active' => ['reports.*'], 'icon' => 'file-text'],
                 ],
             ],
-            ...($isManager ? [[
-                'label' => 'Bibliotecário',
-                'icon' => 'layers',
-                'open' => request()->routeIs('librarian.*'),
-                'links' => [
-                    ['label' => 'Painel', 'route' => 'librarian.dashboard', 'active' => ['librarian.dashboard'], 'icon' => 'dashboard'],
-                ],
-            ]] : []),
+            ...($isManager ? [
+                [
+                    'label' => 'Bibliotecário',
+                    'icon' => 'layers',
+                    'open' => request()->routeIs('librarian.*'),
+                    'links' => [
+                        ['label' => 'Painel', 'route' => 'librarian.dashboard', 'active' => ['librarian.dashboard'], 'icon' => 'dashboard'],
+                    ],
+                ]
+            ] : []),
             [
                 'label' => 'Conta',
                 'icon' => 'user',
@@ -102,21 +104,27 @@
         };
     @endphp
 
-    <aside class="app-sidebar fixed left-0 top-[73px] z-20 hidden h-[calc(100vh-73px)] w-64 border-r border-[#eee1d6] bg-white/92 px-3 py-5 shadow-[18px_0_38px_rgba(88,44,14,0.06)] backdrop-blur-xl dark:border-[#241915] dark:bg-[#090807]/94 lg:flex lg:flex-col">
+    <aside
+        class="app-sidebar fixed left-0 top-[73px] z-20 hidden h-[calc(100vh-73px)] w-64 border-r border-[#eee1d6] bg-white/92 px-3 py-5 shadow-[18px_0_38px_rgba(88,44,14,0.06)] backdrop-blur-xl dark:border-[#241915] dark:bg-[#090807]/94 lg:flex lg:flex-col">
         <nav class="flex flex-1 flex-col gap-2">
             @foreach ($groups as $group)
                 <details class="group/sidebar overflow-hidden rounded-2xl" {{ $group['open'] ? 'open' : '' }}>
-                    <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl px-3 text-sm font-black text-[#2c1c13] transition hover:bg-[#fff7f0] dark:text-white dark:hover:bg-[#17120f] [&::-webkit-details-marker]:hidden">
+                    <summary
+                        class="flex min-h-11 cursor-pointer list-none items-center justify-between rounded-xl px-3 text-sm font-black text-[#2c1c13] transition hover:bg-[#fff7f0] dark:text-white dark:hover:bg-[#17120f] [&::-webkit-details-marker]:hidden">
                         <span class="flex items-center gap-3">
                             {!! $svg($group['icon'], $iconClass) !!}
                             {{ $group['label'] }}
                         </span>
-                        <svg class="h-4 w-4 transition duration-300 group-open/sidebar:rotate-180" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>
+                        <svg class="h-4 w-4 transition duration-300 group-open/sidebar:rotate-180" viewBox="0 0 24 24"
+                            fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m6 9 6 6 6-6" />
+                        </svg>
                     </summary>
 
                     <div class="sidebar-panel grid gap-1 pl-2 pt-1">
                         @foreach ($group['links'] as $link)
-                            <a href="{{ route($link['route'], $link['params'] ?? []) }}" class="{{ $linkBase }} {{ request()->routeIs(...$link['active']) ? $linkActive : $linkIdle }}">
+                            <a href="{{ route($link['route'], $link['params'] ?? []) }}"
+                                class="{{ $linkBase }} {{ request()->routeIs(...$link['active']) ? $linkActive : $linkIdle }}">
                                 {!! $svg($link['icon'], 'h-4 w-4 flex-none opacity-80') !!}
                                 <span class="truncate">{{ $link['label'] }}</span>
                             </a>
@@ -128,8 +136,13 @@
 
         <form method="POST" action="{{ route('logout') }}" class="border-t border-[#f3e4d8] pt-4 dark:border-[#241915]">
             @csrf
-            <button type="submit" class="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-[#9f3b1f] transition hover:bg-[#fff1e6] dark:text-[#ffb07a] dark:hover:bg-[#17120f]">
-                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>
+            <button type="submit"
+                class="flex min-h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold text-[#9f3b1f] transition hover:bg-[#fff1e6] dark:text-[#ffb07a] dark:hover:bg-[#17120f]">
+                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                    <path d="m16 17 5-5-5-5" />
+                    <path d="M21 12H9" />
+                </svg>
                 Terminar sessão
             </button>
         </form>
