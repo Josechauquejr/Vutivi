@@ -11,6 +11,7 @@
         <span>
             <span class="block text-sm font-black text-[#241b14] dark:text-white">Foto de capa</span>
             <span class="mt-1 block text-xs leading-5 text-[#806856] dark:text-[#bcae9f]">Arraste uma imagem ou clique para selecionar.</span>
+            <span class="mt-0.5 block text-xs text-[#9b8b7c]">JPG, PNG ou WebP · Máximo 4 MB</span>
         </span>
         <input data-upload-input data-preview-target="#digital-cover-preview" type="file" name="cover_image" accept="image/*" class="sr-only">
     </label>
@@ -18,6 +19,7 @@
     <div class="grid gap-5">
         <label>
             <span class="mb-1 block text-sm font-semibold text-[#241b14] dark:text-white">Ficheiro digital</span>
+            <span class="mb-2 block text-xs text-[#9b8b7c]">PDF, Word, Excel, PowerPoint, MP3, MP4, ZIP · Máximo 20 MB</span>
             <input type="file" name="file_path" {{ $digital ? '' : 'required' }} accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.mp3,.mp4,.mov,.webm,.zip" class="min-h-12 w-full rounded-xl border border-dashed border-[#decbb8] bg-[#fffaf5] px-3 py-3 text-sm outline-none file:mr-3 file:rounded-lg file:border-0 file:bg-[#FE6807] file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white focus:border-[#FE6807] focus:shadow-[0_0_0_4px_rgba(254,104,7,0.12)] dark:border-[#332820] dark:bg-[#050505] dark:text-white">
             @if ($digital?->file_path)
                 <p class="mt-2 text-xs font-semibold text-[#7f6652] dark:text-[#cfc5ba]">Ficheiro atual carregado.</p>

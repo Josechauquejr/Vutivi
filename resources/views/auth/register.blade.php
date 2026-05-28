@@ -4,7 +4,7 @@
 
 <body class="auth-page" style="--auth-background-image: url('{{ asset('img/svg/loginbc.svg') }}')">
     <x-flash-toasts />
-    <div class="login-container">
+    <div class="login-container login-container--wide">
         <picture>
             <source srcset="{{ asset('img/png/logo_bb2.png') }}" media="(prefers-color-scheme: dark)">
             <img src="{{ asset('img/png/logo_wb.png') }}" alt="Vutivi Library Logo" class="logo">
@@ -28,7 +28,10 @@
                 <span id="register-photo-preview" class="upload-preview skeleton !aspect-square !max-w-32 rounded-full">
                     <img src="" alt="Pré-visualização da foto de perfil" class="hidden">
                 </span>
-                <span class="block text-sm font-black text-[#241b14] dark:text-white">Foto de perfil</span>
+                <span class="space-y-0.5">
+                    <span class="block text-sm font-black text-[#241b14] dark:text-white">Foto de perfil</span>
+                    <span class="block text-xs text-[#9b8b7c]">JPG, PNG ou WebP · Máximo 2 MB</span>
+                </span>
                 <input data-upload-input data-preview-target="#register-photo-preview" type="file" name="profile_photo" accept="image/*" class="sr-only">
             </label>
 

@@ -347,6 +347,10 @@ body.auth-page::before {
     animation: auth-rise 0.48s ease both;
 }
 
+.login-container--wide {
+    max-width: 580px;
+}
+
 @keyframes auth-rise {
     from {
         opacity: 0;

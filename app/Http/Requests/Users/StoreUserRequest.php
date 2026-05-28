@@ -19,7 +19,7 @@ class StoreUserRequest extends UserFormRequest
             'username' => $this->usernameRules(['unique:users,username']),
             'email' => $this->emailRules(['unique:users,email']),
             'password' => $this->passwordRules(true),
-            'profile_photo' => ['nullable', 'image', 'max:4096'],
+            'profile_photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Users;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 /**
@@ -28,13 +29,12 @@ class UpdateUserRequest extends UserFormRequest
                 Rule::unique('users', 'email')->ignore($user->id),
             ]),
             'password' => $this->passwordRules(false),
-            'profile_photo' => ['nullable', 'image', 'max:4096'],
+            'profile_photo' => ['nullable', 'image', 'max:2048'],
         ];
     }
 
     private function routeUser(): User
     {
-        // O model binding da rota informa as regras de unicidade sobre qual registro esta sendo editado.
-        return $this->route('user');
+        return Auth::user();
     }
 }
