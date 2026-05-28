@@ -4,15 +4,26 @@
         $linkBase = 'flex min-h-10 items-center gap-3 rounded-xl px-3 text-sm font-semibold transition duration-200';
         $linkIdle = 'text-[#5e4334] hover:bg-[#fff7f0] hover:text-[#FE6807] dark:text-[#d5c7be] dark:hover:bg-[#17120f]';
         $linkActive = 'bg-[#fff1e6] text-[#FE6807] ring-1 ring-[#ffd8bf] shadow-[0_10px_22px_rgba(254,104,7,0.08)] dark:bg-[#17120f] dark:ring-[#4a2a1b]';
+        $isManager = auth()->user()?->canManageLoans();
+
         $groups = [
+            [
+                'label' => 'Painel',
+                'icon' => 'dashboard',
+                'open' => request()->routeIs('dashboard'),
+                'links' => [
+                    ['label' => 'Dashboard pessoal', 'route' => 'dashboard', 'active' => ['dashboard'], 'icon' => 'dashboard'],
+                ],
+            ],
             [
                 'label' => 'Biblioteca',
                 'icon' => 'book-open',
-                'open' => request()->routeIs('library', 'favorites', 'categories'),
+                'open' => request()->routeIs('library', 'favorites', 'categories', 'reading-lists.*'),
                 'links' => [
                     ['label' => 'Explorar recursos', 'route' => 'library', 'active' => ['library'], 'icon' => 'search'],
                     ['label' => 'Favoritos', 'route' => 'favorites', 'active' => ['favorites'], 'icon' => 'heart'],
                     ['label' => 'Categorias', 'route' => 'categories', 'active' => ['categories'], 'icon' => 'grid'],
+                    ['label' => 'Listas de leitura', 'route' => 'reading-lists.index', 'active' => ['reading-lists.*'], 'icon' => 'list'],
                 ],
             ],
             [
@@ -27,21 +38,38 @@
             [
                 'label' => 'Empréstimos',
                 'icon' => 'repeat',
-                'open' => request()->routeIs('borrowed', 'lent', 'loan-alerts', 'loan-history', 'reservations.*'),
+                'open' => request()->routeIs('borrowed', 'lent', 'loan-alerts', 'loan-history', 'reservations.*', 'fines.*'),
                 'links' => [
-                    ['label' => 'Empréstimos ativos', 'route' => 'borrowed', 'active' => ['borrowed', 'reservations.show'], 'icon' => 'download'],
+                    ['label' => 'Ativos', 'route' => 'borrowed', 'active' => ['borrowed', 'reservations.show'], 'icon' => 'download'],
                     ['label' => 'Solicitações', 'route' => 'lent', 'active' => ['lent'], 'icon' => 'upload'],
-                    ['label' => 'Histórico de empréstimos', 'route' => 'loan-history', 'active' => ['loan-history'], 'icon' => 'history'],
+                    ['label' => 'Histórico', 'route' => 'loan-history', 'active' => ['loan-history'], 'icon' => 'history'],
                     ['label' => 'Notificações', 'route' => 'loan-alerts', 'active' => ['loan-alerts'], 'icon' => 'clock'],
+                    ['label' => 'Multas', 'route' => 'fines.index', 'active' => ['fines.*'], 'icon' => 'alert-circle'],
                 ],
             ],
+            [
+                'label' => 'Relatórios',
+                'icon' => 'bar-chart',
+                'open' => request()->routeIs('reports.*'),
+                'links' => [
+                    ['label' => 'Exportar dados', 'route' => 'reports.index', 'active' => ['reports.*'], 'icon' => 'file-text'],
+                ],
+            ],
+            ...($isManager ? [[
+                'label' => 'Bibliotecário',
+                'icon' => 'layers',
+                'open' => request()->routeIs('librarian.*'),
+                'links' => [
+                    ['label' => 'Painel', 'route' => 'librarian.dashboard', 'active' => ['librarian.dashboard'], 'icon' => 'dashboard'],
+                ],
+            ]] : []),
             [
                 'label' => 'Conta',
                 'icon' => 'user',
                 'open' => request()->routeIs('account', 'users.*'),
                 'links' => [
                     ['label' => 'Perfil', 'route' => 'account', 'active' => ['account'], 'icon' => 'user'],
-                    ['label' => 'Configurações', 'route' => 'users.edit', 'params' => [auth()->id()], 'active' => ['users.edit'], 'icon' => 'settings'],
+                    ['label' => 'Configurações', 'route' => 'users.edit', 'active' => ['users.edit'], 'icon' => 'settings'],
                 ],
             ],
         ];
@@ -62,6 +90,12 @@
                 'clock' => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
                 'history' => '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/><path d="M12 7v5l3 2"/>',
                 'settings' => '<path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.8 1.8 0 0 0 .36 1.98l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.8 1.8 0 0 0 15 19.4a1.8 1.8 0 0 0-1 .6 1.8 1.8 0 0 0-.5 1.27V21a2 2 0 1 1-4 0v-.09A1.8 1.8 0 0 0 8 19.4a1.8 1.8 0 0 0-1.98.36l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.8 1.8 0 0 0 4.6 15a1.8 1.8 0 0 0-.6-1 1.8 1.8 0 0 0-1.27-.5H2.6a2 2 0 1 1 0-4h.09A1.8 1.8 0 0 0 4.6 8a1.8 1.8 0 0 0-.36-1.98l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.8 1.8 0 0 0 9 4.6a1.8 1.8 0 0 0 1-.6 1.8 1.8 0 0 0 .5-1.27V2.6a2 2 0 1 1 4 0v.09A1.8 1.8 0 0 0 16 4.6a1.8 1.8 0 0 0 1.98-.36l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.8 1.8 0 0 0 19.4 9c.4.22.73.55.95.95.2.35.3.75.3 1.15s-.1.8-.3 1.15c-.22.4-.55.73-.95.95Z"/>',
+                'dashboard' => '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+                'bar-chart' => '<line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/>',
+                'bookmark' => '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
+                'list' => '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+                'file-text' => '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+                'alert-circle' => '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
             ];
 
             return '<svg class="' . e($class) . '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' . ($paths[$name] ?? $paths['book-open']) . '</svg>';

@@ -53,21 +53,21 @@ class UserController extends Controller
     }
 
     /**
-     * Exibe a tela de edicao do usuario informado.
+     * Exibe a tela de edicao do usuario autenticado.
      */
-    public function edit(User $user): View
+    public function edit(): View
     {
-        abort_unless(Auth::id() === $user->id, 403);
+        $user = Auth::user();
 
         return view('users.edit', compact('user'));
     }
 
     /**
-     * Atualiza um usuario com dados ja validados.
+     * Atualiza o usuario autenticado com dados ja validados.
      */
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(UpdateUserRequest $request): RedirectResponse
     {
-        abort_unless(Auth::id() === $user->id, 403);
+        $user = Auth::user();
 
         try {
             $user->update($request->validatedUserData());
@@ -81,12 +81,18 @@ class UserController extends Controller
     }
 
     /**
-     * Exclui um usuario e encerra a sessao quando o proprio dono remove a conta.
+     * Exclui o usuario autenticado e encerra a sessao.
      */
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(Request $request): RedirectResponse
     {
-        // Precisamos decidir isso antes da exclusao porque o fluxo do proprio usuario tambem encerra a sessao.
-        $isCurrentUser = $this->isCurrentUser($user);
+        $user = Auth::user();
+
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+        ], [
+            'current_password.required'         => 'A password é obrigatória para confirmar a eliminação.',
+            'current_password.current_password' => 'A password introduzida não está correta.',
+        ]);
 
         try {
             $this->deleteUser->handle($user);
@@ -98,21 +104,7 @@ class UserController extends Controller
             return back()->with('error', 'Não foi possível excluir o utilizador.');
         }
 
-        if ($isCurrentUser) {
-            return $this->redirectAfterDeletingCurrentUser($request);
-        }
-
-        return redirect()
-            ->route('home')
-            ->with('success', 'Utilizador removido com sucesso.');
-    }
-
-    /**
-     * Informa se o usuario alvo da operacao e o mesmo usuario autenticado.
-     */
-    private function isCurrentUser(User $user): bool
-    {
-        return Auth::id() === $user->id;
+        return $this->redirectAfterDeletingCurrentUser($request);
     }
 
     /**

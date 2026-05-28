@@ -42,8 +42,8 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->from(route('users.edit', $user))
-            ->delete(route('users.destroy', $user))
+        $this->from(route('users.edit'))
+            ->delete(route('users.destroy'))
             ->assertRedirect(route('login'))
             ->assertSessionHas('success', 'Sua conta foi excluida com sucesso.');
 
@@ -76,9 +76,9 @@ class UserControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $this->from(route('users.edit', $user))
-            ->delete(route('users.destroy', $user))
-            ->assertRedirect(route('users.edit', $user))
+        $this->from(route('users.edit'))
+            ->delete(route('users.destroy'))
+            ->assertRedirect(route('users.edit'))
             ->assertSessionHas('error', 'Nao e possivel excluir o usuario, pois ele possui recursos associados.');
 
         $this->assertAuthenticatedAs($user);

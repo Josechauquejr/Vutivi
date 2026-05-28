@@ -21,10 +21,10 @@
         : '';
 
     $quickLinks = [
-        ['label' => 'Biblioteca', 'route' => 'library', 'icon' => 'book-open'],
-        ['label' => 'Favoritos', 'route' => 'favorites', 'icon' => 'heart'],
-        ['label' => 'Meus recursos', 'route' => 'mine', 'icon' => 'archive'],
-        ['label' => 'Prazos', 'route' => 'loan-alerts', 'icon' => 'clock'],
+        ['label' => 'Biblioteca', 'route' => 'library', 'svg' => '<path d="M2 4.5A3.5 3.5 0 0 1 5.5 3H11v18H5.5A3.5 3.5 0 0 0 2 22.5v-18Z"/><path d="M22 4.5A3.5 3.5 0 0 0 18.5 3H13v18h5.5a3.5 3.5 0 0 1 3.5 1.5v-18Z"/>'],
+        ['label' => 'Favoritos', 'route' => 'favorites', 'svg' => '<path d="m12 21-1.45-1.32C5.4 15.02 2 11.93 2 8.15 2 5.06 4.42 3 7.5 3c1.74 0 3.41.8 4.5 2.05A6.02 6.02 0 0 1 16.5 3C19.58 3 22 5.06 22 8.15c0 3.78-3.4 6.87-8.55 11.53L12 21Z"/>'],
+        ['label' => 'Meus recursos', 'route' => 'mine', 'svg' => '<path d="M21 8v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8"/><path d="M3 3h18v5H3z"/><path d="M10 12h4"/>'],
+        ['label' => 'Prazos', 'route' => 'loan-alerts', 'svg' => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'],
     ];
 
     // Cache por utilizador durante 5 minutos para evitar 8 queries por página
@@ -176,7 +176,7 @@
                         <div id="quick-access-menu" class="z-40 hidden w-64 rounded-2xl border border-[#eadfce] bg-white p-2 shadow-[0_24px_70px_rgba(54,39,25,0.16)] dark:border-[#2b211b] dark:bg-[#0b0908]">
                             @foreach ($quickLinks as $link)
                                 <a href="{{ route($link['route']) }}" class="{{ request()->routeIs($link['route']) ? $activeLinkClass : $baseLinkClass }}">
-                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></svg>
+                                    <svg class="h-4 w-4 flex-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $link['svg'] !!}</svg>
                                     {{ $link['label'] }}
                                 </a>
                             @endforeach
@@ -209,7 +209,7 @@
                                             'negative' => 'hover:bg-red-50 dark:hover:bg-red-950/20',
                                             default    => 'hover:bg-amber-50 dark:hover:bg-amber-950/20',
                                         };
-                                        $nIcon = match($nType) {
+                                        $nIconBg = match($nType) {
                                             'positive' => 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400',
                                             'negative' => 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400',
                                             default    => 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400',
@@ -219,10 +219,17 @@
                                             'negative' => 'bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-300',
                                             default    => 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
                                         };
+                                        $nIconPaths = [
+                                            'clock'        => '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+                                            'check-circle' => '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+                                            'x-circle'     => '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+                                            'heart'        => '<path d="m12 21-1.45-1.32C5.4 15.02 2 11.93 2 8.15 2 5.06 4.42 3 7.5 3c1.74 0 3.41.8 4.5 2.05A6.02 6.02 0 0 1 16.5 3C19.58 3 22 5.06 22 8.15c0 3.78-3.4 6.87-8.55 11.53L12 21Z"/>',
+                                        ];
+                                        $nSvgPath = $nIconPaths[$notification['icon'] ?? ''] ?? '<circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>';
                                     @endphp
                                     <a href="{{ $notification['route'] }}" class="flex gap-3 rounded-xl p-3 {{ $nHover }}">
-                                        <span class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-lg {{ $nIcon }}">
-                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M12 4h9"/><path d="M4 9h16"/><path d="M4 15h16"/></svg>
+                                        <span class="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-lg {{ $nIconBg }}">
+                                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{!! $nSvgPath !!}</svg>
                                         </span>
                                         <span class="min-w-0">
                                             <span class="block text-sm font-bold text-[#2c1c13] dark:text-white">{{ $notification['title'] }}</span>

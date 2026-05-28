@@ -507,7 +507,9 @@ function App() {
                 throw new Error(data.message || "Falha ao gravar moderacao.");
             if (data.deleted) {
                 setResources((items) =>
-                    items.filter((item) => String(item.id) !== String(data.resource_id)),
+                    items.filter(
+                        (item) => String(item.id) !== String(data.resource_id),
+                    ),
                 );
             } else {
                 setResources((items) =>
@@ -608,9 +610,7 @@ function App() {
             <main className="main">
                 <header className="topbar">
                     <div>
-                        <p>
-                            Gestão de conteúdo e segurança da biblioteca
-                        </p>
+                        <p>Gestão de conteúdo e segurança da biblioteca</p>
                         <h1>
                             {flatNav().find(([key]) => key === active)?.[1]}
                         </h1>
@@ -1195,9 +1195,13 @@ function UsersPanel({ users, setUsers, addLog, reload, currentUser }) {
             });
             const data = await response.json();
             if (!response.ok || !data.ok)
-                throw new Error(data.message || "Nao foi possivel suspender o utilizador.");
+                throw new Error(
+                    data.message || "Nao foi possivel suspender o utilizador.",
+                );
             setUsers((items) =>
-                items.map((item) => (item.id === data.user.id ? data.user : item)),
+                items.map((item) =>
+                    item.id === data.user.id ? data.user : item,
+                ),
             );
             addLog({
                 action: "Utilizador suspenso",
@@ -1216,7 +1220,10 @@ function UsersPanel({ users, setUsers, addLog, reload, currentUser }) {
             <div className="section-head">
                 <div>
                     <h2>Utilizadores da Biblioteca</h2>
-                    <p>Gerencie administradores e suspenda contas com conduta imprudente.</p>
+                    <p>
+                        Gerencie administradores e suspenda contas com conduta
+                        imprudente.
+                    </p>
                 </div>
                 <div className="actions inline">
                     <button className="ghost" onClick={openAccount}>
@@ -1277,17 +1284,21 @@ function UsersPanel({ users, setUsers, addLog, reload, currentUser }) {
                                             className="ghost small danger-text"
                                             onClick={() => banUser(item)}
                                         >
-                                            <Icon icon="shield-blocked" /> Suspender
+                                            <Icon icon="shield-blocked" />{" "}
+                                            Suspender
                                         </button>
                                     )}
-                                    {item.id !== currentUser?.id && item.role !== "user" && (
-                                        <button
-                                            className="ghost small danger-text"
-                                            onClick={() => removeAdmin(item)}
-                                        >
-                                            <Icon icon="delete-01" /> Apagar
-                                        </button>
-                                    )}
+                                    {item.id !== currentUser?.id &&
+                                        item.role !== "user" && (
+                                            <button
+                                                className="ghost small danger-text"
+                                                onClick={() =>
+                                                    removeAdmin(item)
+                                                }
+                                            >
+                                                <Icon icon="delete-01" /> Apagar
+                                            </button>
+                                        )}
                                 </div>
                             </td>
                         </tr>
@@ -2144,10 +2155,18 @@ function RejectedHashes({
             <div className="panel score-help">
                 <h2>Pontuacao de risco</h2>
                 <div className="score-help-grid">
-                    <span><b>Baixo</b> +8 pontos</span>
-                    <span><b>Médio</b> +16 pontos</span>
-                    <span><b>Alto</b> +28 pontos</span>
-                    <span><b>Crítico</b> +42 pontos</span>
+                    <span>
+                        <b>Baixo</b> +8 pontos
+                    </span>
+                    <span>
+                        <b>Médio</b> +16 pontos
+                    </span>
+                    <span>
+                        <b>Alto</b> +28 pontos
+                    </span>
+                    <span>
+                        <b>Crítico</b> +42 pontos
+                    </span>
                 </div>
                 <p className="muted block">
                     Ate 30 aprova automaticamente, 31-79 entra em revisao, 80+
@@ -2370,10 +2389,18 @@ function Keywords({
                     </button>
                 </div>
                 <div className="score-help-grid compact">
-                    <span><b>Baixo</b> +8</span>
-                    <span><b>Médio</b> +16</span>
-                    <span><b>Alto</b> +28</span>
-                    <span><b>Crítico</b> +42</span>
+                    <span>
+                        <b>Baixo</b> +8
+                    </span>
+                    <span>
+                        <b>Médio</b> +16
+                    </span>
+                    <span>
+                        <b>Alto</b> +28
+                    </span>
+                    <span>
+                        <b>Crítico</b> +42
+                    </span>
                 </div>
                 {false && (
                     <div className="panel-form">
@@ -2581,41 +2608,68 @@ function Metric({ label, value, tone = "" }) {
 function Icon({ icon, big = false }) {
     const name = iconName(icon);
     const paths = {
-        "home-01": '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+        "home-01":
+            '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
         activity: '<path d="M3 12h4l2-6 4 12 2-6h6"/>',
-        library: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22V5.5Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22V5.5Z"/>',
+        library:
+            '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v17H6.5A2.5 2.5 0 0 0 4 22V5.5Z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v17h4.5A2.5 2.5 0 0 1 20 22V5.5Z"/>',
         "time-quarter": '<circle cx="12" cy="12" r="9"/><path d="M12 7v5h4"/>',
-        "shield-blocked": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/>',
+        "shield-blocked":
+            '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/>',
         key: '<circle cx="7.5" cy="14.5" r="3.5"/><path d="M10 12 21 1"/><path d="m16 6 3 3"/><path d="m13 9 3 3"/>',
-        "user-group": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
-        "notification-01": '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
-        "logout-01": '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
-        refresh: '<path d="M21 12a9 9 0 0 1-15.5 6.2"/><path d="M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18 2v4h4"/><path d="M6 22v-4H2"/>',
-        "cancel-circle": '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+        "user-group":
+            '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+        "notification-01":
+            '<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/>',
+        "logout-01":
+            '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>',
+        refresh:
+            '<path d="M21 12a9 9 0 0 1-15.5 6.2"/><path d="M3 12A9 9 0 0 1 18.5 5.8"/><path d="M18 2v4h4"/><path d="M6 22v-4H2"/>',
+        "cancel-circle":
+            '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
         "cancel-01": '<path d="m18 6-12 12"/><path d="m6 6 12 12"/>',
-        "lock-01": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
-        "unlock-01": '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
-        "user-check-01": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
-        "add-circle": '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>',
-        "edit-01": '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>',
-        "delete-01": '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 15H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+        "lock-01":
+            '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+        "unlock-01":
+            '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-2"/>',
+        "user-check-01":
+            '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="m16 11 2 2 4-4"/>',
+        "add-circle":
+            '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>',
+        "edit-01":
+            '<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/>',
+        "delete-01":
+            '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 15H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>',
         sent: '<path d="m22 2-7 20-4-9-9-4 20-7Z"/><path d="M22 2 11 13"/>',
         "search-01": '<circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/>',
         filter: '<path d="M3 5h18"/><path d="M6 12h12"/><path d="M10 19h4"/>',
-        "pdf-01": '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 16h1.5a1.5 1.5 0 0 0 0-3H9v5"/><path d="M14 13v5"/><path d="M16 13h3"/><path d="M16 16h2"/>',
-        "video-01": '<rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2"/>',
-        "music-note-01": '<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>',
-        "book-open-01": '<path d="M2 5a3 3 0 0 1 3-3h6v18H5a3 3 0 0 0-3 3V5Z"/><path d="M22 5a3 3 0 0 0-3-3h-6v18h6a3 3 0 0 1 3 3V5Z"/>',
-        "doc-01": '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/>',
-        "chart-bar": '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
-        fingerprint: '<path d="M12 11a3 3 0 0 0-3 3c0 2-1 4-2 5"/><path d="M12 11a3 3 0 0 1 3 3c0 1.5.5 3.5 2 5"/><path d="M6 14a6 6 0 0 1 12 0"/><path d="M4 10a9 9 0 0 1 16 0"/><path d="M12 14v2"/><path d="M10 22c1-1 2-3 2-6"/>',
-        "checkmark-circle-01": '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
-        "alert-diamond": '<path d="m12 2 10 10-10 10L2 12 12 2Z"/><path d="M12 8v5"/><path d="M12 16h.01"/>',
-        "alert-circle": '<circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16h.01"/>',
-        "information-circle": '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/>',
-        "checkmark-badge-01": '<path d="M12 2 15 5l4-.5.5 4 3 3.5-3 3.5-.5 4-4-.5-3 3-3-3-4 .5-.5-4-3-3.5 3-3.5.5-4 4 .5 3-3Z"/><path d="m8 12 3 3 5-6"/>',
+        "pdf-01":
+            '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 16h1.5a1.5 1.5 0 0 0 0-3H9v5"/><path d="M14 13v5"/><path d="M16 13h3"/><path d="M16 16h2"/>',
+        "video-01":
+            '<rect x="3" y="6" width="14" height="12" rx="2"/><path d="m17 10 4-2v8l-4-2"/>',
+        "music-note-01":
+            '<path d="M9 18V5l10-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="16" cy="16" r="3"/>',
+        "book-open-01":
+            '<path d="M2 5a3 3 0 0 1 3-3h6v18H5a3 3 0 0 0-3 3V5Z"/><path d="M22 5a3 3 0 0 0-3-3h-6v18h6a3 3 0 0 1 3 3V5Z"/>',
+        "doc-01":
+            '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h6"/>',
+        "chart-bar":
+            '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+        fingerprint:
+            '<path d="M12 11a3 3 0 0 0-3 3c0 2-1 4-2 5"/><path d="M12 11a3 3 0 0 1 3 3c0 1.5.5 3.5 2 5"/><path d="M6 14a6 6 0 0 1 12 0"/><path d="M4 10a9 9 0 0 1 16 0"/><path d="M12 14v2"/><path d="M10 22c1-1 2-3 2-6"/>',
+        "checkmark-circle-01":
+            '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+        "alert-diamond":
+            '<path d="m12 2 10 10-10 10L2 12 12 2Z"/><path d="M12 8v5"/><path d="M12 16h.01"/>',
+        "alert-circle":
+            '<circle cx="12" cy="12" r="9"/><path d="M12 7v6"/><path d="M12 16h.01"/>',
+        "information-circle":
+            '<circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7h.01"/>',
+        "checkmark-badge-01":
+            '<path d="M12 2 15 5l4-.5.5 4 3 3.5-3 3.5-.5 4-4-.5-3 3-3-3-4 .5-.5-4-3-3.5 3-3.5.5-4 4 .5 3-3Z"/><path d="m8 12 3 3 5-6"/>',
     };
-    const fallback = '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>';
+    const fallback =
+        '<circle cx="12" cy="12" r="9"/><path d="M12 8v8"/><path d="M8 12h8"/>';
 
     return (
         <svg

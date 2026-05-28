@@ -4,6 +4,7 @@
 <body class="home-layout bg-[#fbfaf7] dark:bg-[#050505]">
     <x-navbar />
     <main class="item px-3 pb-10 pt-4 sm:px-5 md:px-6 lg:px-8">
+        <x-breadcrumbs :items="[['label' => 'Dashboard pessoal']]" />
         <section class="mx-auto max-w-5xl space-y-6">
 
             {{-- Header --}}
@@ -17,10 +18,10 @@
             <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 @php
                     $stats = [
-                        ['label' => 'Emprestados', 'value' => $totalBorrowed, 'color' => 'text-[#9b6b3f]'],
+                        ['label' => 'Total pedidos', 'value' => $totalBorrowed, 'color' => 'text-[#9b6b3f]'],
                         ['label' => 'Devolvidos', 'value' => $totalReturned, 'color' => 'text-emerald-600 dark:text-emerald-400'],
+                        ['label' => 'Ativos', 'value' => $activeLoans->count(), 'color' => $activeLoans->count() > 0 ? 'text-[#9b6b3f]' : 'text-[#66594d] dark:text-[#cfc5ba]'],
                         ['label' => 'Em atraso', 'value' => $overdueLoans, 'color' => $overdueLoans > 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'],
-                        ['label' => 'Dias de atraso total', 'value' => $totalDaysOverdue, 'color' => $totalDaysOverdue > 0 ? 'text-red-600 dark:text-red-400' : 'text-[#66594d] dark:text-[#cfc5ba]'],
                     ];
                 @endphp
                 @foreach ($stats as $stat)
@@ -68,8 +69,8 @@
             {{-- Recursos mais emprestados --}}
             @if ($topBorrowed->isNotEmpty())
                 <div class="rounded-2xl border border-[#eadfce] bg-white p-5 dark:border-[#27211a] dark:bg-[#090909]">
-                    <h2 class="text-lg font-semibold text-[#241b14] dark:text-white">Os seus favoritos</h2>
-                    <p class="mt-0.5 text-sm text-[#66594d] dark:text-[#cfc5ba]">Recursos que mais pediu emprestado.</p>
+                    <h2 class="text-lg font-semibold text-[#241b14] dark:text-white">Mais pedidos</h2>
+                    <p class="mt-0.5 text-sm text-[#66594d] dark:text-[#cfc5ba]">Recursos que pediu com mais frequência.</p>
                     <div class="mt-3 space-y-2">
                         @foreach ($topBorrowed as $item)
                             <div class="flex items-center gap-3">

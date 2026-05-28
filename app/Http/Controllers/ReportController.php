@@ -5,18 +5,41 @@ namespace App\Http\Controllers;
 use App\Models\Fine;
 use App\Models\Reservation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $isManager = $user->canManageLoans();
+
+        $myActiveCount   = Reservation::where('user_id', $user->id)->whereNull('returned_at')->whereIn('status', Reservation::COPY_HOLDING_STATUSES)->count();
+        $myOverdueCount  = Reservation::where('user_id', $user->id)->whereNull('returned_at')->whereIn('status', [Reservation::STATUS_IN_USE, Reservation::STATUS_EXTENDED])->whereDate('end_date', '<', now()->toDateString())->count();
+        $myHistoryCount  = Reservation::where('user_id', $user->id)->count();
+        $myFinesCount    = Fine::where('user_id', $user->id)->count();
+
+        $allActiveCount  = $isManager ? Reservation::whereNull('returned_at')->whereIn('status', Reservation::COPY_HOLDING_STATUSES)->count() : null;
+        $allOverdueCount = $isManager ? Reservation::whereNull('returned_at')->whereIn('status', [Reservation::STATUS_IN_USE, Reservation::STATUS_EXTENDED])->whereDate('end_date', '<', now()->toDateString())->count() : null;
+        $allHistoryCount = $isManager ? Reservation::count() : null;
+        $allFinesCount   = $isManager ? Fine::count() : null;
+
+        return view('reports.index', compact(
+            'isManager',
+            'myActiveCount', 'myOverdueCount', 'myHistoryCount', 'myFinesCount',
+            'allActiveCount', 'allOverdueCount', 'allHistoryCount', 'allFinesCount',
+        ));
+    }
+
     public function activeLoans(Request $request): StreamedResponse
     {
-        abort_unless(auth()->user()->canManageLoans() || $request->boolean('mine'), 403);
+        abort_unless(Auth::user()->canManageLoans() || $request->boolean('mine'), 403);
 
         $query = Reservation::with(['resource:id,title,type', 'user:id,name,email'])
             ->whereNull('returned_at')
             ->whereIn('status', Reservation::COPY_HOLDING_STATUSES)
-            ->when($request->boolean('mine'), fn ($q) => $q->whereHas('resource', fn ($r) => $r->where('owner_id', auth()->id())))
+            ->when($request->boolean('mine'), fn ($q) => $q->whereHas('resource', fn ($r) => $r->where('owner_id', Auth::id())))
             ->orderBy('end_date');
 
         return $this->streamCsv('emprestimos_ativos', [
@@ -35,13 +58,13 @@ class ReportController extends Controller
 
     public function overdueLoans(Request $request): StreamedResponse
     {
-        abort_unless(auth()->user()->canManageLoans() || $request->boolean('mine'), 403);
+        abort_unless(Auth::user()->canManageLoans() || $request->boolean('mine'), 403);
 
         $query = Reservation::with(['resource:id,title', 'user:id,name,email'])
             ->whereNull('returned_at')
             ->whereIn('status', [Reservation::STATUS_IN_USE, Reservation::STATUS_EXTENDED])
             ->whereDate('end_date', '<', now()->toDateString())
-            ->when($request->boolean('mine'), fn ($q) => $q->whereHas('resource', fn ($r) => $r->where('owner_id', auth()->id())))
+            ->when($request->boolean('mine'), fn ($q) => $q->whereHas('resource', fn ($r) => $r->where('owner_id', Auth::id())))
             ->orderBy('end_date');
 
         return $this->streamCsv('emprestimos_atrasados', [
@@ -58,10 +81,10 @@ class ReportController extends Controller
 
     public function loanHistory(Request $request): StreamedResponse
     {
-        abort_unless(auth()->user()->canManageLoans() || $request->boolean('mine'), 403);
+        abort_unless(Auth::user()->canManageLoans() || $request->boolean('mine'), 403);
 
         $query = Reservation::with(['resource:id,title,type', 'user:id,name,email'])
-            ->when($request->boolean('mine'), fn ($q) => $q->where('user_id', auth()->id()))
+            ->when($request->boolean('mine'), fn ($q) => $q->where('user_id', Auth::id()))
             ->orderByDesc('created_at');
 
         return $this->streamCsv('historico_emprestimos', [
@@ -80,10 +103,10 @@ class ReportController extends Controller
 
     public function fines(Request $request): StreamedResponse
     {
-        abort_unless(auth()->user()->canManageLoans() || $request->boolean('mine'), 403);
+        abort_unless(Auth::user()->canManageLoans() || $request->boolean('mine'), 403);
 
         $query = Fine::with(['user:id,name,email', 'reservation.resource:id,title'])
-            ->when($request->boolean('mine'), fn ($q) => $q->where('user_id', auth()->id()))
+            ->when($request->boolean('mine'), fn ($q) => $q->where('user_id', Auth::id()))
             ->orderByDesc('created_at');
 
         return $this->streamCsv('multas', [

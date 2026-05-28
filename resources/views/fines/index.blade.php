@@ -4,6 +4,7 @@
 <body class="home-layout bg-[#fbfaf7] dark:bg-[#050505]">
     <x-navbar />
     <main class="item px-3 pb-10 pt-4 sm:px-5 md:px-6 lg:px-8">
+        <x-breadcrumbs :items="[['label' => 'Multas']]" />
         <section class="mx-auto max-w-4xl space-y-5">
             <div class="rounded-2xl border border-[#eadfce] bg-white p-5 dark:border-[#27211a] dark:bg-[#090909]">
                 <p class="text-xs font-semibold uppercase tracking-[0.24em] text-red-500">Multas</p>

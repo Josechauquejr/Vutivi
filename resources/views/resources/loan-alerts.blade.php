@@ -4,6 +4,7 @@
 <body class="home-layout bg-[#fbfaf7] dark:bg-[#050505]">
     <x-navbar />
     <main class="item px-3 pb-10 pt-4 sm:px-5 md:px-6 lg:px-8">
+        <x-breadcrumbs :items="[['label' => 'Notificações de empréstimos']]" />
         <section class="mx-auto max-w-5xl rounded-2xl border border-[#eadfce] bg-white p-5 dark:border-[#27211a] dark:bg-[#090909]">
             <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#9b6b3f]">Notificações</p>
             <h1 class="mt-2 text-3xl font-semibold text-[#241b14] dark:text-white">Notificações de empréstimos</h1>

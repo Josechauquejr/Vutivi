@@ -27,7 +27,7 @@ class ResourceReturnedNotification extends Notification
             'resource_id'     => $this->reservation->resource_id,
             'resource_title'  => $title,
             'borrower_name'   => $borrower,
-            'message'         => "{$borrower} devolveu "{$title}".",
+            'message'         => "{$borrower} devolveu \"{$title}\".",
             'type'            => 'positive',
         ];
     }

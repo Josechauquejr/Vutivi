@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\PasswordResetController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DigitalResourceController;
 use App\Http\Controllers\FineController;
+use App\Http\Controllers\LibrarianController;
 use App\Http\Controllers\ModerationController;
 use App\Http\Controllers\PhysicalResourceController;
 use App\Http\Controllers\ReadingListController;
@@ -94,16 +95,17 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
     // Fines
     Route::get('/fines', [FineController::class, 'index'])->name('fines.index');
 
-    // Reports (personal)
+    // Reports
+    Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/active-loans', [ReportController::class, 'activeLoans'])->name('reports.active-loans');
     Route::get('/reports/overdue-loans', [ReportController::class, 'overdueLoans'])->name('reports.overdue-loans');
     Route::get('/reports/loan-history', [ReportController::class, 'loanHistory'])->name('reports.loan-history');
     Route::get('/reports/fines', [ReportController::class, 'fines'])->name('reports.fines');
 
-    Route::prefix('users')->name('users.')->controller(UserController::class)->group(function () {
-        Route::get('{user}/edit', 'edit')->name('edit');
-        Route::put('{user}', 'update')->name('update');
-        Route::delete('{user}', 'destroy')->name('destroy');
+    Route::controller(UserController::class)->group(function () {
+        Route::get('/account/edit', 'edit')->name('users.edit');
+        Route::put('/account', 'update')->name('users.update');
+        Route::delete('/account', 'destroy')->name('users.destroy');
     });
 
     Route::resource('resources', ResourceController::class)->only(['index', 'show', 'destroy']);
@@ -136,6 +138,15 @@ Route::middleware(['auth', 'not_admin'])->group(function () {
         Route::put('/reservations/{reservation}', [ReservationController::class, 'update'])->name('reservations.update');
         Route::patch('/reservations/{reservation}', [ReservationController::class, 'update']);
     });
+});
+
+Route::middleware(['auth', 'librarian'])->prefix('librarian')->name('librarian.')->group(function () {
+    Route::get('/', [LibrarianController::class, 'dashboard'])->name('dashboard');
+    Route::patch('reservations/{id}/pickup', [LibrarianController::class, 'confirmPickup'])->name('reservations.pickup');
+    Route::patch('reservations/{id}/return', [LibrarianController::class, 'confirmReturn'])->name('reservations.return');
+    Route::patch('reservations/{id}/approve', [LibrarianController::class, 'approvePending'])->name('reservations.approve');
+    Route::patch('reservations/{id}/deny', [LibrarianController::class, 'denyPending'])->name('reservations.deny');
+    Route::patch('fines/{id}/pay', [LibrarianController::class, 'markFinePaid'])->name('fines.pay');
 });
 
 Route::middleware('auth')->post('/logout', [LoginController::class, 'destroy'])->name('logout');

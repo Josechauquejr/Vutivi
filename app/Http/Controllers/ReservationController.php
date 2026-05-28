@@ -16,6 +16,7 @@ use App\Models\Reservation;
 use App\Models\Resource;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -60,8 +61,8 @@ class ReservationController extends Controller
 
         $reservations = Reservation::with(['resource.owner', 'user'])
             ->where(function ($query) {
-                $query->where('user_id', auth()->id())
-                    ->orWhereHas('resource', fn ($query) => $query->where('owner_id', auth()->id()));
+                $query->where('user_id', Auth::id())
+                    ->orWhereHas('resource', fn ($query) => $query->where('owner_id', Auth::id()));
             })
             ->where(function ($query) {
                 $query->whereNotNull('returned_at')
@@ -110,7 +111,7 @@ class ReservationController extends Controller
     public function store(StoreReservationRequest $request)
     {
         $reservationData = $request->reservationData();
-        $reservationData['user_id'] = $reservationData['user_id'] ?? auth()->id();
+        $reservationData['user_id'] = $reservationData['user_id'] ?? Auth::id();
         $resource = $this->reservationResource((int) $reservationData['resource_id']);
 
         $this->validateReservationAgainstResource->handle($resource, $reservationData);
@@ -145,7 +146,7 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservation($id);
         $reservation->load('resource');
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
 
         $resources = $this->availableResourcesForForms();
         $users = $this->availableUsersForForms();
@@ -164,7 +165,7 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservation($id);
         $reservation->load('resource');
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
 
         $previousResource = $reservation->resource;
         $reservationData = $request->reservationData();
@@ -187,7 +188,7 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservation($id);
         $reservation->load('resource');
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
 
         $resource = $reservation->resource;
 
@@ -204,8 +205,8 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservationDetails($id);
         abort_unless(
-            (int) $reservation->user_id === (int) auth()->id()
-                || (int) $reservation->resource?->owner_id === (int) auth()->id(),
+            (int) $reservation->user_id === (int) Auth::id()
+                || (int) $reservation->resource?->owner_id === (int) Auth::id(),
             403
         );
 
@@ -232,7 +233,7 @@ class ReservationController extends Controller
     public function approve(int $id)
     {
         $reservation = $this->reservationDetails($id);
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
         abort_unless($reservation->status === Reservation::STATUS_PENDING, 422);
 
         DB::transaction(function () use ($id) {
@@ -249,21 +250,23 @@ class ReservationController extends Controller
             $resource->refresh();
             $resource->update(['status' => (int) $resource->quantity_available > 0 ? 'available' : 'reserved']);
 
-            $reservation->update([
-                'status' => Reservation::STATUS_IN_USE,
-                'approved_by' => auth()->id(),
+            $goDirectlyInUse = $reservation->resource?->type === 'digital';
+
+            $reservation->update(array_filter([
+                'status' => $goDirectlyInUse ? Reservation::STATUS_IN_USE : Reservation::STATUS_APPROVED,
+                'approved_by' => Auth::id(),
                 'approved_at' => now(),
-                'picked_up_at' => now(),
-            ]);
+                'picked_up_at' => $goDirectlyInUse ? now() : null,
+            ], fn ($v) => $v !== null));
         });
 
-        return back()->with('success', 'Pedido aprovado. O recurso entrou em uso.');
+        return back()->with('success', 'Pedido aprovado. Aguarda levantamento na biblioteca.');
     }
 
     public function deny(int $id)
     {
         $reservation = $this->reservationDetails($id);
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
 
         $reservation->update(['status' => Reservation::STATUS_DENIED]);
         $this->syncResourceAvailability->handle($reservation->resource->fresh());
@@ -275,7 +278,7 @@ class ReservationController extends Controller
     {
         $reservation = $this->reservation($id);
         $reservation->load('resource.physicalResource');
-        abort_unless((int) $reservation->user_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->user_id === (int) Auth::id(), 403);
 
         if ($reservation->status === Reservation::STATUS_EXTENSION_PENDING) {
             throw ValidationException::withMessages([
@@ -313,7 +316,7 @@ class ReservationController extends Controller
     public function approveExtension(Request $request, int $id)
     {
         $reservation = $this->reservationDetails($id);
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
         abort_unless($reservation->status === Reservation::STATUS_EXTENSION_PENDING, 422);
 
         $reservation->update([
@@ -323,7 +326,7 @@ class ReservationController extends Controller
             'extension_decision' => Reservation::EXTENSION_APPROVED,
             'extension_decided_at' => now(),
             'extension_decision_note' => $request->input('extension_decision_note'),
-            'extension_reviewed_by' => auth()->id(),
+            'extension_reviewed_by' => Auth::id(),
         ]);
 
         return back()->with('success', 'Extensão aprovada. O novo prazo foi aplicado.');
@@ -332,7 +335,7 @@ class ReservationController extends Controller
     public function denyExtension(Request $request, int $id)
     {
         $reservation = $this->reservationDetails($id);
-        abort_unless((int) $reservation->resource?->owner_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->resource?->owner_id === (int) Auth::id(), 403);
         abort_unless($reservation->status === Reservation::STATUS_EXTENSION_PENDING, 422);
 
         $reservation->update([
@@ -340,7 +343,7 @@ class ReservationController extends Controller
             'extension_decision' => Reservation::EXTENSION_DENIED,
             'extension_decided_at' => now(),
             'extension_decision_note' => $request->input('extension_decision_note'),
-            'extension_reviewed_by' => auth()->id(),
+            'extension_reviewed_by' => Auth::id(),
         ]);
 
         return back()->with('error', 'Extensão negada. O prazo original permanece ativo.');
@@ -349,7 +352,7 @@ class ReservationController extends Controller
     public function autoRenew(int $id)
     {
         $reservation = $this->reservation($id);
-        abort_unless((int) $reservation->user_id === (int) auth()->id(), 403);
+        abort_unless((int) $reservation->user_id === (int) Auth::id(), 403);
 
         $this->autoRenewReservation->handle($reservation);
 
@@ -373,7 +376,7 @@ class ReservationController extends Controller
 
         $reservations = Reservation::with('resource')
             ->whereIn('id', $data['ids'])
-            ->whereHas('resource', fn ($q) => $q->where('owner_id', auth()->id()))
+            ->whereHas('resource', fn ($q) => $q->where('owner_id', Auth::id()))
             ->where('status', Reservation::STATUS_PENDING)
             ->get();
 
@@ -392,12 +395,14 @@ class ReservationController extends Controller
                     $resource->refresh();
                     $resource->update(['status' => (int) $resource->quantity_available > 0 ? 'available' : 'reserved']);
 
-                    $reservation->update([
-                        'status'      => Reservation::STATUS_IN_USE,
-                        'approved_by' => auth()->id(),
+                    $goDirectlyInUse = $reservation->resource?->type === 'digital';
+
+                    $reservation->update(array_filter([
+                        'status'      => $goDirectlyInUse ? Reservation::STATUS_IN_USE : Reservation::STATUS_APPROVED,
+                        'approved_by' => Auth::id(),
                         'approved_at' => now(),
-                        'picked_up_at' => now(),
-                    ]);
+                        'picked_up_at' => $goDirectlyInUse ? now() : null,
+                    ], fn ($v) => $v !== null));
                 });
             } else {
                 $reservation->update(['status' => Reservation::STATUS_DENIED]);
