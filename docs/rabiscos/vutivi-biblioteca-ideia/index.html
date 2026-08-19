@@ -1,0 +1,736 @@
+<!doctype html>
+<html lang="pt-MZ">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Biblioteca Vutivi | Rascunho de Ideia</title>
+    <link rel="icon" href="../../../public/img/png/vuticon_orangeBck@4x.png" type="image/png">
+    <style>
+        @font-face {
+            font-family: "Golos";
+            src: url("../../../resources/font/GolosText-VariableFont_wght.ttf") format("truetype");
+            font-style: normal;
+            font-weight: 400 900;
+        }
+
+        @font-face {
+            font-family: "Space Grotesk";
+            src: url("../../../resources/font/SpaceGrotesk-VariableFont_wght.ttf") format("truetype");
+            font-style: normal;
+            font-weight: 300 700;
+        }
+
+        :root {
+            --primary: #FE6807;
+            --primary-hover: #e15f07;
+            --secondary: #9b6b3f;
+            --paper: #fbfaf7;
+            --cream: #fffaf5;
+            --soft: #fff1e6;
+            --surface: #ffffff;
+            --border: #eadfce;
+            --border-strong: #decbb8;
+            --text: #241b14;
+            --muted: #66594d;
+            --green: #167a4a;
+            --blue: #285f8f;
+            --red: #a73522;
+            --shadow: 0 18px 50px rgba(54, 39, 25, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--paper);
+            color: var(--text);
+            font-family: "Golos", Arial, sans-serif;
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin: 0;
+            color: var(--text);
+            font-family: "Space Grotesk", "Golos", sans-serif;
+            letter-spacing: 0;
+        }
+
+        p {
+            color: var(--muted);
+            line-height: 1.75;
+        }
+
+        a {
+            color: var(--primary);
+            font-weight: 800;
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--primary-hover);
+            text-decoration: underline;
+        }
+
+        .shell {
+            display: grid;
+            grid-template-columns: 280px minmax(0, 1fr);
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            border-right: 1px solid var(--border);
+            background: var(--surface);
+            padding: 22px;
+            box-shadow: 18px 0 38px rgba(54, 39, 25, 0.06);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand img {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .brand strong {
+            display: block;
+            font-size: 20px;
+        }
+
+        .brand span,
+        .eyebrow,
+        .small {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .nav-group {
+            display: grid;
+            gap: 7px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .nav-group small {
+            color: var(--secondary);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-height: 42px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 0 12px;
+            color: var(--muted);
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .nav-link:hover {
+            border-color: var(--border);
+            background: var(--paper);
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .main {
+            min-width: 0;
+            padding: 28px;
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.8fr);
+            gap: 22px;
+            align-items: stretch;
+            margin-bottom: 18px;
+        }
+
+        .hero-copy {
+            display: grid;
+            align-content: center;
+            min-height: 430px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 245, 0.88)),
+                radial-gradient(circle at 8% 10%, rgba(254, 104, 7, 0.14), transparent 32%);
+            padding: clamp(26px, 5vw, 54px);
+            box-shadow: var(--shadow);
+        }
+
+        .hero h1 {
+            max-width: 760px;
+            font-size: clamp(44px, 7vw, 82px);
+            line-height: 0.98;
+        }
+
+        .hero p {
+            max-width: 720px;
+            margin: 18px 0 0;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .hero-visual {
+            position: relative;
+            overflow: hidden;
+            min-height: 430px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: #120d09;
+            box-shadow: var(--shadow);
+        }
+
+        .hero-visual img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.88;
+        }
+
+        .floating-note {
+            position: absolute;
+            right: 18px;
+            bottom: 18px;
+            width: min(280px, calc(100% - 36px));
+            border: 1px solid rgba(234, 223, 206, 0.92);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 14px;
+            box-shadow: 0 18px 42px rgba(36, 27, 20, 0.18);
+        }
+
+        .floating-note strong {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .section-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 0.45fr);
+            gap: 18px;
+            margin-top: 18px;
+        }
+
+        .panel,
+        .metric,
+        .callout {
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--surface);
+            padding: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .panel h2 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .panel h3 {
+            margin-top: 20px;
+            font-size: 17px;
+            color: var(--secondary);
+        }
+
+        .panel ul,
+        .panel ol {
+            margin: 12px 0 0;
+            padding-left: 22px;
+            color: var(--muted);
+            line-height: 1.75;
+        }
+
+        .panel li + li {
+            margin-top: 8px;
+        }
+
+        .panel li::marker {
+            color: var(--primary);
+            font-weight: 900;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        .metric {
+            box-shadow: none;
+        }
+
+        .metric span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .metric strong {
+            display: block;
+            margin-top: 12px;
+            color: var(--primary);
+            font-family: "Space Grotesk", "Golos", sans-serif;
+            font-size: 30px;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .tag-list li {
+            margin: 0;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--cream);
+            padding: 6px 10px;
+            color: var(--secondary);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .flow {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .flow-step {
+            display: grid;
+            grid-template-columns: 42px 1fr;
+            gap: 12px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--cream);
+            padding: 12px;
+        }
+
+        .flow-step b {
+            display: grid;
+            place-items: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: var(--primary);
+            color: white;
+            font-family: "Space Grotesk", "Golos", sans-serif;
+        }
+
+        .flow-step strong {
+            display: block;
+        }
+
+        .flow-step span {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+
+        .callout {
+            position: sticky;
+            top: 28px;
+            background: var(--cream);
+        }
+
+        .callout h2 {
+            font-size: 22px;
+        }
+
+        .callout a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            margin-top: 12px;
+            border-radius: 10px;
+            background: var(--primary);
+            padding: 0 14px;
+            color: white;
+            text-decoration: none;
+        }
+
+        .link-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 14px;
+            padding: 0;
+            list-style: none;
+        }
+
+        .link-list li {
+            margin: 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            color: currentColor;
+            flex: none;
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            background: var(--soft);
+            padding: 5px 10px;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        footer {
+            margin-top: 18px;
+            border-top: 1px solid var(--border);
+            padding: 22px 0 4px;
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .shell,
+            .hero,
+            .section-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+                height: auto;
+                border-right: 0;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .nav-group {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .nav-group small {
+                grid-column: 1 / -1;
+            }
+
+            .cards {
+                grid-template-columns: 1fr;
+            }
+
+            .callout {
+                position: static;
+            }
+        }
+
+        @media (max-width: 620px) {
+            .main,
+            .sidebar {
+                padding: 16px;
+            }
+
+            .hero-copy,
+            .panel,
+            .metric,
+            .callout {
+                border-radius: 12px;
+                padding: 16px;
+            }
+
+            .hero-copy,
+            .hero-visual {
+                min-height: 320px;
+            }
+
+            .nav-group {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <aside class="sidebar" aria-label="Navegação da página">
+            <div class="brand">
+                <img src="../../../public/img/png/vuticon_orangeBck@4x.png" alt="Ícone Vutivi">
+                <div>
+                    <strong>Vutivi</strong>
+                    <span>Biblioteca, busca e acesso</span>
+                </div>
+            </div>
+
+            <nav class="nav-group">
+                <small>Conteúdo</small>
+                <a class="nav-link" href="#conceito">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v15H6.5A2.5 2.5 0 0 0 4 21.5v-15Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8h8M8 12h7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Conceito
+                </a>
+                <a class="nav-link" href="#recursos">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16M4 12h16M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M7 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Recursos
+                </a>
+                <a class="nav-link" href="#usuarios">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M16 19a4 4 0 0 0-8 0M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM19 20a3.5 3.5 0 0 0-3-3.45M18 7.5a3 3 0 0 1 0 5.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Usuários
+                </a>
+                <a class="nav-link" href="#verificacao">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 20 6v6c0 5-3.4 7.8-8 9-4.6-1.2-8-4-8-9V6l8-3Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m8.5 12 2.2 2.2 4.8-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Verificação
+                </a>
+                <a class="nav-link" href="#economia">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3v18M17 7.5c-.7-1.2-2.2-2-4.2-2-2.3 0-4 1.1-4 2.8 0 4.2 8.4 1.6 8.4 6.5 0 1.9-1.8 3.2-4.4 3.2-2.2 0-4-.9-4.8-2.4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    Economia
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <section class="hero" id="topo">
+                <div class="hero-copy">
+                    <span class="status">Rascunho de ideia</span>
+                    <h1>Biblioteca Vutivi</h1>
+                    <p>
+                        Uma plataforma para descobrir, reservar, emprestar, comprar e publicar livros físicos
+                        ou digitais, conectando leitores, bibliotecas verificadas, autores, editoras e vendedores.
+                    </p>
+                </div>
+                <div class="hero-visual" aria-label="Visual de livros da Biblioteca Vutivi">
+                    <img src="../../../public/img/png/book_background.png" alt="Livros organizados em ambiente de biblioteca">
+                    <div class="floating-note">
+                        <strong>Modelo híbrido</strong>
+                        <span class="small">Busca literária, acervo físico, livros premium e empréstimos controlados.</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="section-grid">
+                <article class="panel" id="conceito">
+                    <p class="eyebrow">Conceito novo</p>
+                    <h2>Da biblioteca simples para um ecossistema literário</h2>
+                    <p>
+                        A Vutivi pode funcionar como uma biblioteca moderna: não apenas lista livros, mas organiza
+                        relações de confiança entre quem tem livros, quem procura conhecimento e quem administra
+                        espaços físicos de leitura.
+                    </p>
+
+                    <ul class="tag-list" aria-label="Pilares da plataforma">
+                        <li>Busca de livros</li>
+                        <li>Acervo físico</li>
+                        <li>Livros premium</li>
+                        <li>Empréstimos</li>
+                        <li>Bibliotecas verificadas</li>
+                    </ul>
+
+                    <div class="cards">
+                        <div class="metric">
+                            <span>
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 19V5a2 2 0 0 1 2-2h12v18H7a2 2 0 0 1-2-2Z" stroke="currentColor" stroke-width="2"/><path d="M9 7h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                Acervo
+                            </span>
+                            <strong>Organizar</strong>
+                        </div>
+                        <div class="metric">
+                            <span>
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="m16.5 16.5 3.5 3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                                Descoberta
+                            </span>
+                            <strong>Encontrar</strong>
+                        </div>
+                        <div class="metric">
+                            <span>
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12l-1 11H7L6 10Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                                Acesso
+                            </span>
+                            <strong>Comprar</strong>
+                        </div>
+                    </div>
+                </article>
+
+                <aside class="callout">
+                    <h2>Resumo</h2>
+                    <p>
+                        A Vutivi pode ser pensada como um navegador de livros com camada de confiança,
+                        permitindo consulta, venda, premium, reserva e empréstimo físico.
+                    </p>
+                    <a href="#verificacao">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        Ver confiança
+                    </a>
+                </aside>
+            </section>
+
+            <section class="section-grid">
+                <article class="panel" id="recursos">
+                    <p class="eyebrow">Recursos</p>
+                    <h2>O que a Biblioteca Vutivi deve permitir</h2>
+                    <p>
+                        A página de cada livro deve explicar claramente se o item está disponível para leitura,
+                        compra, reserva ou empréstimo. Isso evita confusão e melhora a confiança do usuário.
+                    </p>
+
+                    <h3>Lista não ordenada</h3>
+                    <ul>
+                        <li>Pesquisar livros por título, autor, categoria, idioma, localização e disponibilidade.</li>
+                        <li>Cadastrar livros físicos, digitais, gratuitos ou premium.</li>
+                        <li>Mostrar bibliotecas físicas próximas e o acervo disponível em cada local.</li>
+                        <li>Permitir avaliações, denúncias e histórico de transações.</li>
+                    </ul>
+
+                    <h3>Lista ordenada</h3>
+                    <ol>
+                        <li>O usuário pesquisa um livro.</li>
+                        <li>O sistema mostra opções gratuitas, premium, físicas, digitais e emprestáveis.</li>
+                        <li>O usuário escolhe comprar, reservar, ler ou solicitar empréstimo.</li>
+                        <li>A plataforma acompanha o estado do pedido até a conclusão.</li>
+                    </ol>
+                </article>
+
+                <article class="panel" id="usuarios">
+                    <p class="eyebrow">Usuários</p>
+                    <h2>Perfis do sistema</h2>
+                    <ul>
+                        <li>Leitor: pesquisa, compra, reserva, empresta e avalia livros.</li>
+                        <li>Usuário comum: cadastra e vende livros físicos próprios.</li>
+                        <li>Biblioteca física: mostra acervo, gere reservas, empréstimos e livros premium.</li>
+                        <li>Autor ou editora: publica obras digitais e físicas com controle comercial.</li>
+                        <li>Administrador: modera, verifica bibliotecas e aprova livros premium.</li>
+                    </ul>
+                </article>
+            </section>
+
+            <section class="section-grid">
+                <article class="panel" id="verificacao">
+                    <p class="eyebrow">Confiança</p>
+                    <h2>Verificação de bibliotecas e livros premium</h2>
+                    <p>
+                        Para evitar bibliotecas falsas e livros premium vazios, a Vutivi precisa combinar
+                        validação automática, análise humana, denúncia pública e regras claras de pagamento.
+                    </p>
+
+                    <h3>Lista aninhada</h3>
+                    <ul>
+                        <li>
+                            Biblioteca verificada
+                            <ul>
+                                <li>Endereço físico confirmado.</li>
+                                <li>Contacto institucional validado.</li>
+                                <li>Fotos, documentos e responsável analisados pela equipa.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            Livro premium aprovado
+                            <ul>
+                                <li>Arquivo digital válido ou foto real do livro físico.</li>
+                                <li>Capa, descrição, preço e categoria obrigatórios.</li>
+                                <li>Estado: rascunho, pendente, aprovado, publicado ou suspenso.</li>
+                            </ul>
+                        </li>
+                        <li>
+                            Proteção do usuário
+                            <ul>
+                                <li>Pagamento retido até confirmação.</li>
+                                <li>Botão de denúncia visível.</li>
+                                <li>Reembolso quando o conteúdo for inválido.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </article>
+
+                <article class="panel">
+                    <p class="eyebrow">Fluxo</p>
+                    <h2>Publicação segura</h2>
+                    <div class="flow">
+                        <div class="flow-step">
+                            <b>1</b>
+                            <div>
+                                <strong>Cadastro</strong>
+                                <span>Biblioteca ou usuário envia dados completos do livro.</span>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <b>2</b>
+                            <div>
+                                <strong>Revisão</strong>
+                                <span>Sistema e equipa validam conteúdo, preço, localização e prova física.</span>
+                            </div>
+                        </div>
+                        <div class="flow-step">
+                            <b>3</b>
+                            <div>
+                                <strong>Publicação</strong>
+                                <span>Livro aprovado aparece na busca com selo, disponibilidade e ações permitidas.</span>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="section-grid">
+                <article class="panel" id="economia">
+                    <p class="eyebrow">Modelo econômico</p>
+                    <h2>Compra e empréstimo podem coexistir</h2>
+                    <p>
+                        A compra resolve a posse definitiva. O empréstimo resolve o acesso temporário, mais barato
+                        e natural para bibliotecas físicas. Juntos, eles aumentam o alcance econômico da plataforma.
+                    </p>
+                    <ol>
+                        <li>Livros premium digitais geram receita direta por venda.</li>
+                        <li>Livros físicos de usuários comuns podem ser vendidos como novos, usados ou raros.</li>
+                        <li>Bibliotecas verificadas podem gerir empréstimos gratuitos, pagos ou com caução.</li>
+                        <li>Planos de assinatura podem oferecer uma quantidade mensal de empréstimos.</li>
+                    </ol>
+                </article>
+
+                <article class="panel">
+                    <p class="eyebrow">Hiperligações</p>
+                    <h2>Referências internas</h2>
+                    <ul class="link-list">
+                        <li><a href="#conceito">Ir para o conceito da Biblioteca Vutivi</a></li>
+                        <li><a href="#recursos">Ver recursos essenciais do sistema</a></li>
+                        <li><a href="#usuarios">Consultar tipos de usuários</a></li>
+                        <li><a href="#topo">Voltar ao início da página</a></li>
+                    </ul>
+                </article>
+            </section>
+
+            <footer>
+                Rascunho estático para discussão de ideia. Pasta descartável: docs/rabiscos/vutivi-biblioteca-ideia.
+            </footer>
+        </main>
+    </div>
+</body>
+</html>
